@@ -1,0 +1,280 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-royal: var(--royal);
+  --color-lime: var(--lime);
+  --color-teal: #097D86;
+  --color-teal-bright: #0ED5C0;
+  --color-slate-dark: #0F252C;
+  --font-display: "Bebas Neue", "Cinzel", Georgia, serif;
+  --font-sans: "Roboto Condensed", "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: #F5FDFE;
+  --foreground: #0F252C;
+  --card: oklch(1 0 0);
+  --card-foreground: #0F252C;
+  --popover: oklch(1 0 0);
+  --popover-foreground: #0F252C;
+  --primary: #097D86;
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: #EFFAFC;
+  --secondary-foreground: #0F252C;
+  --muted: #EAF7FA;
+  --muted-foreground: #4A6A73;
+  --accent: #0ED5C0;
+  --accent-foreground: #0F252C;
+  --destructive: oklch(0.6 0.24 27);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: #CDEAF0;
+  --input: #E8F6F9;
+  --ring: #097D86;
+  --royal: #097D86;
+  --lime: #0ED5C0;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html, body {
+    font-family: var(--font-sans);
+    color: var(--color-foreground);
+  }
+  h1 {
+    font-family: "Bebas Neue", var(--font-display);
+    letter-spacing: 0.01em;
+    color: #000000 !important;
+    line-height: 1.05;
+  }
+  h2 {
+    font-family: var(--font-sans);
+    letter-spacing: 0;
+    color: #097D86;
+    font-weight: 700;
+  }
+  h3, h4, h5 {
+    font-family: var(--font-sans);
+    letter-spacing: 0;
+    color: #0F252C;
+    font-weight: 600;
+  }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(1200px 700px at 12% -10%, rgba(14, 213, 192, 0.14), transparent 60%),
+      radial-gradient(900px 600px at 105% 8%, rgba(9, 125, 134, 0.10), transparent 60%),
+      radial-gradient(700px 500px at 50% 110%, rgba(10, 160, 171, 0.10), transparent 60%),
+      #F5FDFE;
+    background-attachment: fixed;
+    position: relative;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(255,255,255,0.55) 0 2px, transparent 3px),
+      radial-gradient(circle at 80% 60%, rgba(255,255,255,0.45) 0 2px, transparent 3px),
+      radial-gradient(circle at 40% 80%, rgba(255,255,255,0.35) 0 1.5px, transparent 2.5px),
+      linear-gradient(180deg, transparent 0, rgba(9,125,134,0.04) 100%);
+    background-size: 220px 220px, 260px 260px, 180px 180px, auto;
+    mix-blend-mode: soft-light;
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      radial-gradient(480px 480px at 85% 85%, rgba(14, 213, 192, 0.10), transparent 65%),
+      radial-gradient(420px 420px at 10% 75%, rgba(9, 125, 134, 0.08), transparent 65%);
+    animation: bg-drift 22s ease-in-out infinite alternate;
+  }
+  @keyframes bg-drift {
+    0%   { transform: translate3d(0,0,0) scale(1); }
+    100% { transform: translate3d(-20px,-30px,0) scale(1.05); }
+  }
+  main, header, footer { position: relative; z-index: 1; }
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+@utility h1-teal {
+  color: #097D86;
+}
+
+@utility h1-slate {
+  color: #0F252C;
+}
+
+@utility glass-card {
+  background: color-mix(in oklab, white 78%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid color-mix(in oklab, #097D86 14%, transparent);
+  box-shadow: 0 10px 30px -12px color-mix(in oklab, #097D86 22%, transparent);
+}
+
+@utility btn-royal {
+  background: linear-gradient(135deg, #0AA0AB, #097D86);
+  color: white;
+  box-shadow: 0 6px 20px -6px color-mix(in oklab, #097D86 55%, transparent);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  &:hover {
+    filter: brightness(1.08);
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px -8px color-mix(in oklab, #097D86 70%, transparent);
+  }
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+@utility btn-lime {
+  background: linear-gradient(135deg, #0ED5C0, #0AA0AB);
+  color: white;
+  box-shadow: 0 6px 20px -6px color-mix(in oklab, #0ED5C0 60%, transparent);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  &:hover {
+    filter: brightness(1.08);
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px -8px color-mix(in oklab, #0ED5C0 75%, transparent);
+  }
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+/* Rectangular nav / secondary button hover */
+@utility btn-rect {
+  border-radius: 0.6rem;
+  border: 1px solid transparent;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease, color 0.2s ease;
+  &:hover {
+    border-color: color-mix(in oklab, #097D86 35%, transparent);
+    background: linear-gradient(135deg, color-mix(in oklab, #0ED5C0 16%, transparent), color-mix(in oklab, #097D86 12%, transparent));
+    color: #097D86;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px -12px color-mix(in oklab, #097D86 70%, transparent);
+  }
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+/* Universal interactive hover polish */
+@layer base {
+  button,
+  a[href],
+  [role="button"] {
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease,
+      box-shadow 0.2s ease, transform 0.2s ease, filter 0.2s ease;
+  }
+  button:not(:disabled):hover,
+  [role="button"]:not([aria-disabled="true"]):hover {
+    filter: brightness(1.04);
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
+
+@keyframes drift-slow {
+  0%   { transform: translate3d(0,0,0) scale(1); }
+  100% { transform: translate3d(26px,-24px,0) scale(1.08); }
+}
+.bg-drift-slow { animation: drift-slow 18s ease-in-out infinite alternate; }
+
+/* Twinkling sparkles */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.15; transform: translateY(0) scale(1); }
+  50% { opacity: 0.7; transform: translateY(-6px) scale(1.15); }
+}
+.sparkle {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(9,125,134,0.5), rgba(9,125,134,0) 70%);
+  animation: twinkle 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+.float-slow { animation: float-slow 6s ease-in-out infinite; }
+
+@keyframes wave-hand {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  10% { transform: rotate(14deg); }
+  20% { transform: rotate(-8deg); }
+  30% { transform: rotate(14deg); }
+  40% { transform: rotate(-4deg); }
+  50% { transform: rotate(10deg); }
+}
+
+/* Scroll reveal */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; will-change: opacity, transform; }
+.reveal.is-visible { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .float-slow, .sparkle { animation: none; }
+}
+
+
+/* --- Hero doctor: 3D depth, soft shadow and idle float --- */
+@keyframes doc-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes accent-float {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(0, -18px, 0) rotate(6deg); }
+}
+@utility doctor-depth {
+  filter: drop-shadow(0px 20px 25px rgba(0, 0, 0, 0.15))
+    drop-shadow(0px 6px 8px rgba(0, 0, 0, 0.08));
+}
+@utility doctor-float {
+  animation: doc-float 4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .doctor-float { animation: none; }
+}
