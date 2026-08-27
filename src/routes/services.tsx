@@ -8,6 +8,7 @@ import {
   CLINIC,
 } from "@/lib/clinic-data";
 import { usePrices } from "@/lib/use-prices";
+import { useLanguage } from "@/context/LanguageContext";
 
 
 const FAQS = [
@@ -92,6 +93,7 @@ export const Route = createFileRoute("/services")({
 
 function Services() {
   const { priceOf } = usePrices();
+  const { t } = useLanguage();
   return (
     <section className="px-4 py-16 md:px-8">
       <div className="mx-auto max-w-7xl">
@@ -100,7 +102,7 @@ function Services() {
             Our services
           </p>
           <h1 className="mt-2 text-4xl text-primary sm:text-5xl">
-            Come visit us we care about your health.
+            Come visit us — we care about your health.
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
             Comprehensive laboratory testing and specialist clinical care — processed
