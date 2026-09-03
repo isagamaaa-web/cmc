@@ -19,6 +19,7 @@ import { Chatbot } from "@/components/Chatbot";
 import { PageBackground } from "@/components/PageBackground";
 import { OfflineCache } from "@/components/OfflineCache";
 import { OfflineSync } from "@/components/OfflineSync";
+import { LanguageProvider } from "@/context/LanguageContext";
 
 
 import { Toaster } from "@/components/ui/sonner";
@@ -47,7 +48,6 @@ const ORG_JSONLD = {
         medicalSpecialty: "InternalMedicine",
       },
       areaServed: "Addis Ababa",
-      priceRange: "$$",
     },
   ],
 };
@@ -166,22 +166,24 @@ function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = pathname.startsWith("/doctors");
   return (
-    <QueryClientProvider client={queryClient}>
-      {!isAdmin && <PageBackground />}
-      {!isAdmin && <Sparkles />}
-      <div className="flex min-h-dvh flex-col">
-        <Header />
-        <main className="flex-1">
-          <Outlet />
-        </main>
-        <Footer />
-      </div>
-      <Chatbot />
-      <OfflineCache />
-      <OfflineSync />
+    <LanguageProvider>
+      <QueryClientProvider client={queryClient}>
+        {!isAdmin && <PageBackground />}
+        {!isAdmin && <Sparkles />}
+        <div className="flex min-h-dvh flex-col">
+          <Header />
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          <Footer />
+        </div>
+        <Chatbot />
+        <OfflineCache />
+        <OfflineSync />
 
-      <Toaster />
+        <Toaster />
 
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </LanguageProvider>
   );
 }

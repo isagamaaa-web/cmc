@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Microscope, HeartPulse, ArrowRight, Stethoscope, Tag } from "lucide-react";
+import { Microscope, HeartPulse, ArrowRight, Stethoscope } from "lucide-react";
 import { GlassCard } from "@/components/GlassCard";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import {
@@ -7,7 +7,6 @@ import {
   CLINICAL_SERVICE_ITEMS,
   CLINIC,
 } from "@/lib/clinic-data";
-import { usePrices } from "@/lib/use-prices";
 import { useLanguage } from "@/context/LanguageContext";
 
 
@@ -23,10 +22,6 @@ const FAQS = [
   {
     q: "Do you provide imaging services?",
     a: "Yes — ultrasound / sonography (abdominal, pelvic and general) and 12-lead ECG are performed in-house.",
-  },
-  {
-    q: "How much do services cost?",
-    a: "Consultations are 800–3,000 ETB, ECG 500–2,000 ETB, ultrasound 525–17,100 ETB, and lab panels start from 150 ETB. Every service price is listed on this page.",
   },
   {
     q: "Is the clinic really open 24/7?",
@@ -76,12 +71,12 @@ export const Route = createFileRoute("/services")({
             ...CLINICAL_SERVICE_ITEMS.map((i) => ({
               "@type": "MedicalProcedure",
               name: i.title,
-              description: `${i.description} Price: ${i.price}.`,
+              description: i.description,
             })),
             ...LAB_PANEL_ITEMS.map((i) => ({
               "@type": "MedicalTest",
               name: i.title,
-              description: `${i.description} Price: ${i.price}.`,
+              description: i.description,
             })),
           ],
         }),
@@ -92,7 +87,6 @@ export const Route = createFileRoute("/services")({
 });
 
 function Services() {
-  const { priceOf } = usePrices();
   const { t } = useLanguage();
   return (
     <section className="px-4 py-16 md:px-8">
@@ -106,8 +100,7 @@ function Services() {
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
             Comprehensive laboratory testing and specialist clinical care — processed
-            in-house, delivered without the runaround. Every price below is transparent
-            and quoted in Ethiopian Birr (ETB).
+            in-house, delivered without the runaround.
           </p>
         </ScrollReveal>
 
@@ -134,9 +127,6 @@ function Services() {
                     </h3>
                     <p className="mt-1.5 text-sm text-muted-foreground">
                       {item.description}
-                    </p>
-                    <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-accent/20 px-3 py-1.5 text-sm font-bold text-primary">
-                      <Tag className="h-3.5 w-3.5" /> {priceOf(item.title) ?? item.price}
                     </p>
                   </GlassCard>
                 </ScrollReveal>
@@ -168,9 +158,6 @@ function Services() {
                     </h3>
                     <p className="mt-1.5 text-sm text-muted-foreground">
                       {item.description}
-                    </p>
-                    <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-accent/20 px-3 py-1.5 text-sm font-bold text-primary">
-                      <Tag className="h-3.5 w-3.5" /> {priceOf(item.title) ?? item.price}
                     </p>
                   </GlassCard>
                 </ScrollReveal>

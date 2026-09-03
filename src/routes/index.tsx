@@ -6,6 +6,7 @@ import { GlassCard } from "@/components/GlassCard";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { CLINIC, LAB_PANELS, CLINICAL_SERVICES, telHref } from "@/lib/clinic-data";
 import doctorImg from "@/assets/doctor-waving.png";
+import { useLanguage } from "@/context/LanguageContext";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Central Medium Clinic: 24/7 internal medicine, ECG, ultrasound and full lab testing with Dr. Gebeyehu in Ashawa Meda. Transparent ETB prices, online booking.",
+          "Central Medium Clinic: 24/7 internal medicine, ECG, ultrasound and full lab testing with Dr. Gebeyehu in Ashawa Meda. Online booking.",
       },
       {
         name: "keywords",
@@ -40,6 +41,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
+  const { t } = useLanguage();
   return (
     <>
       {/* Hero */}
@@ -49,14 +51,14 @@ function Home() {
 
           <ScrollReveal>
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-white/70 px-3 py-1 text-xs font-semibold text-primary">
-              <ShieldCheck className="h-3.5 w-3.5" /> Trusted Internal Medicine
+              <ShieldCheck className="h-3.5 w-3.5" /> {t("trustedTag")}
             </span>
             <h1 className="mt-4 text-4xl leading-tight text-primary sm:text-5xl lg:text-6xl">
-              24/7 Complete <span className="text-accent">Medical Care</span>
+              {t("heroTitle1")} <span className="text-accent">{t("heroTitle2")}</span>
             </h1>
             <p className="mt-5 max-w-xl text-lg text-muted-foreground">
               {CLINIC.name} — led by <strong className="text-foreground">{CLINIC.doctor}</strong>,{" "}
-              {CLINIC.role}. Round-the-clock diagnostics, imaging, and specialist care.
+              {CLINIC.role}. {t("heroDesc").replace("Central Medium Clinic — led by Dr. Gebeyehu, Internal Medicine Specialist. ", "")}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a
@@ -64,7 +66,7 @@ function Home() {
                 className="btn-royal inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold"
                 aria-label={`Emergency call ${CLINIC.phones[0]}`}
               >
-                <Phone className="h-4 w-4" /> Emergency: {CLINIC.phones[0]}
+                <Phone className="h-4 w-4" /> {t("emergencyLabel")} {CLINIC.phones[0]}
               </a>
               <a
                 href={telHref(CLINIC.phones[1])}
@@ -77,12 +79,12 @@ function Home() {
                 to="/booking"
                 className="btn-lime inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold"
               >
-                Book Appointment <ArrowRight className="h-4 w-4" />
+                {t("bookAppointment")} <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
             <div className="mt-8 flex items-center gap-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> 24 Hours / 7 Days</div>
-              <div className="flex items-center gap-2"><HeartPulse className="h-4 w-4 text-accent" /> Emergency ready</div>
+              <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> {t("hoursBadge")}</div>
+              <div className="flex items-center gap-2"><HeartPulse className="h-4 w-4 text-accent" /> {t("emergencyBadge")}</div>
             </div>
           </ScrollReveal>
           <ScrollReveal delay={100}>
@@ -200,10 +202,6 @@ function Home() {
                     {
                       title: "Caring specialists",
                       desc: "Our multidisciplinary team of experienced doctors and staff.",
-                    },
-                    {
-                      title: "Transparent pricing",
-                      desc: "Clear quotes upfront. No surprises after treatment.",
                     },
                   ].map((item) => (
                     <li key={item.title} className="flex items-start gap-4">

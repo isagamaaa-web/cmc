@@ -2,8 +2,10 @@ import { Link } from "@tanstack/react-router";
 import { Phone, MapPin, Clock } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { CLINIC, telHref } from "@/lib/clinic-data";
+import { useLanguage } from "@/context/LanguageContext";
 
 export function Footer() {
+  const { t } = useLanguage();
   return (
     <footer className="mt-24 border-t border-border/60 bg-white/60 backdrop-blur">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 md:grid-cols-3 md:px-8">
@@ -42,11 +44,11 @@ export function Footer() {
         <div>
           <h3 className="text-lg text-primary">Explore</h3>
           <ul className="mt-3 grid grid-cols-2 gap-1 text-sm">
-            <li><Link to="/" className="hover:text-primary">Home</Link></li>
-            <li><Link to="/about" className="hover:text-primary">About</Link></li>
-            <li><Link to="/services" className="hover:text-primary">Services</Link></li>
-            <li><Link to="/booking" className="hover:text-primary">Book</Link></li>
-            <li><Link to="/contact" className="hover:text-primary">Contact</Link></li>
+            <li><Link to="/" className="hover:text-primary">{t("home")}</Link></li>
+            <li><Link to="/about" className="hover:text-primary">{t("about")}</Link></li>
+            <li><Link to="/services" className="hover:text-primary">{t("services")}</Link></li>
+            <li><Link to="/booking" className="hover:text-primary">{t("bookAppointment")}</Link></li>
+            <li><Link to="/contact" className="hover:text-primary">{t("contact")}</Link></li>
           </ul>
         </div>
       </div>

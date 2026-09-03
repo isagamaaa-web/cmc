@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Globe, ChevronDown, Check } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
+import { LanguageCode } from "@/lib/translations";
 
-type LangCode = "en" | "am" | "om" | "ar" | "so";
-
-const LANGS: { code: LangCode; label: string; native: string; flag: string }[] = [
+const LANGS: { code: LanguageCode; label: string; native: string; flag: string }[] = [
   { code: "en", label: "English", native: "English", flag: "🇬🇧" },
   { code: "am", label: "Amharic", native: "አማርኛ", flag: "🇪🇹" },
   { code: "om", label: "Oromoo", native: "Afaan Oromoo", flag: "🇪🇹" },
@@ -13,7 +13,7 @@ const LANGS: { code: LangCode; label: string; native: string; flag: string }[] =
 
 const STORAGE_KEY = "cmc_lang";
 
-function setGoogTransCookie(target: LangCode) {
+function setGoogTransCookie(target: LanguageCode) {
   const value = `/en/${target}`;
   const host = window.location.hostname;
   // Cookie for exact host and for parent domain(s)
@@ -39,14 +39,13 @@ function clearGoogTransCookie() {
 }
 
 export function LanguageSwitcher() {
-  const [current, setCurrent] = useState<LangCode>("en");
+  const { language, setLanguage } = useLanguage();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
   // Boot: read saved lang, set cookie BEFORE loading widget, then load widget.
   useEffect(() => {
-    const saved = (localStorage.getItem(STORAGE_KEY) as LangCode | null) || "en";
-    setCurrent(saved);
+    const saved = (localStorage.getItem(STORAGE_KEY) as LanguageCode | null) || "en";
 
     if (saved !== "en") {
       setGoogTransCookie(saved);
@@ -95,17 +94,17 @@ export function LanguageSwitcher() {
     return () => document.removeEventListener("mousedown", onClick);
   }, [open]);
 
-  const change = (code: LangCode) => {
+  const change = (code: LanguageCode) => {
     localStorage.setItem(STORAGE_KEY, code);
     if (code === "en") clearGoogTransCookie();
     else setGoogTransCookie(code);
-    setCurrent(code);
+    setLanguage(code);
     setOpen(false);
     // Fastest, most reliable way to apply Google Translate on all rendered nodes.
     window.location.reload();
   };
 
-  const active = LANGS.find((l) => l.code === current) ?? LANGS[0];
+  const active = LANGS.find((l) => l.code === language) ?? LANGS[0];
 
   return (
     <>
@@ -129,7 +128,7 @@ export function LanguageSwitcher() {
             className="absolute left-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl border border-primary/20 bg-white shadow-xl"
           >
             {LANGS.map((l) => {
-              const isActive = l.code === current;
+              const isActive = l.code === language;
               return (
                 <li key={l.code}>
                   <button

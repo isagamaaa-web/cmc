@@ -3,12 +3,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useEffect, useRef, useState } from "react";
-import { CalendarDays, Send, ShieldCheck, X, Lock, Tag } from "lucide-react";
+import { CalendarDays, Send, ShieldCheck, X, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { GlassCard } from "@/components/GlassCard";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { ALL_SERVICES } from "@/lib/clinic-data";
-import { usePrices } from "@/lib/use-prices";
 import { addBooking, getDeviceId, type StoredBooking } from "@/lib/bookings";
 import { queueBooking } from "@/lib/offline-queue";
 import {
@@ -104,15 +103,10 @@ function Booking() {
   });
 
 
-  const { priceOf } = usePrices();
-
-
-
   const onSubmit = async (values: FormValues) => {
     try {
       const booking: StoredBooking = {
         deviceId: getDeviceId(),
-        price: priceOf(values.service),
         id:
           typeof crypto !== "undefined" && "randomUUID" in crypto
             ? crypto.randomUUID()
@@ -159,7 +153,6 @@ function Booking() {
     }
   }, []);
   const selectedService = watch("service");
-  const selectedPrice = selectedService ? priceOf(selectedService) : undefined;
 
   // Admin unlock: only the admin email filled in, everything else empty.
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -302,15 +295,10 @@ function Booking() {
                     </option>
                     {ALL_SERVICES.map((s) => (
                       <option key={s} value={s}>
-                        {s} — {priceOf(s)}
+                        {s}
                       </option>
                     ))}
                   </select>
-                  {selectedPrice && (
-                    <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-accent/20 px-3 py-1.5 text-sm font-semibold text-primary">
-                      <Tag className="h-3.5 w-3.5" /> Estimated price: {selectedPrice}
-                    </div>
-                  )}
                 </Field>
               </div>
 

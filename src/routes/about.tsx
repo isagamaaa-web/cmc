@@ -3,6 +3,7 @@ import { Stethoscope, Clock, Award, HeartHandshake } from "lucide-react";
 import { GlassCard } from "@/components/GlassCard";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { CLINIC } from "@/lib/clinic-data";
+import { useLanguage } from "@/context/LanguageContext";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/about")({
 });
 
 function About() {
+  const { t } = useLanguage();
   return (
     <section className="px-4 py-16 md:px-8">
       <div className="mx-auto max-w-6xl">
@@ -62,7 +64,7 @@ function About() {
               <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-accent/20 text-primary">
                 <Clock className="h-6 w-6" />
               </div>
-              <h3 className="mt-4 text-xl text-primary">24 Hours / 7 Days</h3>
+              <h3 className="mt-4 text-xl text-primary">{t("hoursBadge")}</h3>
               <p className="mt-2 text-sm text-muted-foreground">
                 Whether it's an emergency at midnight or a check-up on a Sunday morning, our team
                 is ready. Care doesn't wait — and neither do we.

@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Phone, MapPin, Clock, WifiOff, ExternalLink } from "lucide-react";
+import { Phone, MapPin, Clock, WifiOff, ExternalLink, Navigation } from "lucide-react";
 import { GlassCard } from "@/components/GlassCard";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { CLINIC, telHref } from "@/lib/clinic-data";
+import { useLanguage } from "@/context/LanguageContext";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/contact")({
 });
 
 function Contact() {
+  const { t } = useLanguage();
   const mapQuery = encodeURIComponent(
     "Ashawa Meda, Gabriel Church, Kusaye road, Salaam Mosque, Addis Ababa",
   );
@@ -42,7 +44,7 @@ function Contact() {
     <section className="px-4 py-16 md:px-8">
       <div className="mx-auto max-w-6xl">
         <ScrollReveal>
-          <h1 className="text-4xl text-primary sm:text-5xl">Contact Us</h1>
+          <h1 className="text-4xl text-primary sm:text-5xl">{t("contact")}</h1>
           <p className="mt-3 max-w-2xl text-lg text-muted-foreground">
             We're here around the clock. Reach {CLINIC.name} by phone or visit us in person.
           </p>
@@ -76,7 +78,7 @@ function Contact() {
               <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-accent/20 text-primary">
                 <Clock className="h-5 w-5" />
               </div>
-              <h2 className="mt-4 text-xl text-primary">Operating Hours</h2>
+              <h2 className="mt-4 text-xl text-primary">{t("hoursBadge")}</h2>
               <p className="mt-3 text-2xl font-semibold text-foreground">{CLINIC.hours}</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Emergency, consultations & labs — always open.
@@ -97,20 +99,34 @@ function Contact() {
 
         <ScrollReveal delay={80}>
           <GlassCard className="mt-8 overflow-hidden p-0">
-            <div className="aspect-[16/9] w-full">
-              {online ? (
-                <iframe
-                  title="Central Medium Clinic location map"
-                  src={mapSrc}
-                  loading="eager"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  className="h-full w-full border-0"
-                  allowFullScreen
-                />
-              ) : (
-                <OfflineMap link={mapLink} />
-              )}
+            <div className="p-4 pb-0">
+              <a
+                href="https://www.google.com/maps/dir/?api=1&destination=9.023333,38.650861"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
+                aria-label="Get directions to Central Medium Clinic"
+              >
+                <Navigation className="h-4 w-4" />
+                Get Directions
+              </a>
             </div>
+            {online ? (
+              <div className="w-full h-[400px] overflow-hidden rounded-xl border border-border shadow-sm">
+                <iframe
+                  title="Central Medium Clinic Location"
+                  src="https://maps.google.com/maps?q=9.023333,38.650861&hl=es;z=16&output=embed"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
+            ) : (
+              <OfflineMap link={mapLink} />
+            )}
           </GlassCard>
         </ScrollReveal>
       </div>

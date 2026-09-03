@@ -3,12 +3,11 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CalendarClock, Save, Tag, Smartphone } from "lucide-react";
+import { CalendarClock, Save, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { GlassCard } from "@/components/GlassCard";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { ALL_SERVICES, CLINIC } from "@/lib/clinic-data";
-import { usePrices } from "@/lib/use-prices";
 import { findMyBooking, updateBooking, type StoredBooking } from "@/lib/bookings";
 import { queueReschedule } from "@/lib/offline-queue";
 
@@ -117,10 +116,8 @@ function RescheduleForm({
       service: booking.service,
     },
   });
-  const { priceOf } = usePrices();
 
   const selectedService = watch("service");
-  const selectedPrice = selectedService ? priceOf(selectedService) : undefined;
   const hasErrors = Object.keys(errors).length > 0;
 
 
@@ -131,7 +128,6 @@ function RescheduleForm({
       phone: values.phone,
       date: values.date,
       service: values.service,
-      price: priceOf(values.service),
     };
     let updated: StoredBooking | undefined;
     try {
@@ -245,15 +241,10 @@ function RescheduleForm({
                   >
                     {ALL_SERVICES.map((s) => (
                       <option key={s} value={s}>
-                        {s} — {priceOf(s)}
+                        {s}
                       </option>
                     ))}
                   </select>
-                  {selectedPrice && (
-                    <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-accent/20 px-3 py-1.5 text-sm font-semibold text-primary">
-                      <Tag className="h-3.5 w-3.5" /> Estimated price: {selectedPrice}
-                    </div>
-                  )}
                 </div>
               </div>
 

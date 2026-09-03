@@ -261,13 +261,13 @@ export async function resetDatabaseConfig(): Promise<void> {
 export async function testDatabaseConfig(cfg: DatabaseSettings): Promise<string | null> {
   const base = cfg.url.replace(/\/+$/, "");
   try {
-    const res = await fetch(`${base}/rest/v1/service_prices?select=title&limit=1`, {
+    const res = await fetch(`${base}/rest/v1/bookings?select=id&limit=1`, {
       headers: { apikey: cfg.secretKey, Authorization: `Bearer ${cfg.secretKey}` },
     });
     if (res.ok) return null;
     if (res.status === 401 || res.status === 403) return "The project rejected the secret key.";
     if (res.status === 404)
-      return "Connected, but this project has no `service_prices` table yet.";
+      return "Connected, but this project has no `bookings` table yet.";
     return `Database responded with error ${res.status}.`;
   } catch {
     return "Could not reach that project URL.";

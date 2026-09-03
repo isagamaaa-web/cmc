@@ -6,7 +6,6 @@ export type StoredBooking = {
   phone: string;
   date: string;
   service: string;
-  price?: string;
   notes?: string;
   submittedAt: string;
   updatedAt?: string;
@@ -172,7 +171,6 @@ export function addBooking(b: StoredBooking) {
       { field: "date", to: b.date },
       { field: "service", to: b.service },
       { field: "phone", to: b.phone },
-      ...(b.price ? [{ field: "price", to: b.price }] : []),
     ],
   });
 }

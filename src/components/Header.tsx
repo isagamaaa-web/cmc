@@ -4,18 +4,21 @@ import { Menu, X, Phone } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { CLINIC, telHref } from "@/lib/clinic-data";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-
-const nav = [
-  { to: "/", label: "Home" },
-  { to: "/about", label: "About" },
-  { to: "/services", label: "Services" },
-  { to: "/contact", label: "Contact" },
-  { to: "/reschedule", label: "Reschedule" },
-  { to: "/booking", label: "Book Appointment" },
-] as const;
+import { useLanguage } from "@/context/LanguageContext";
 
 export function Header() {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
+
+  const nav = [
+    { to: "/", label: t("home") },
+    { to: "/about", label: t("about") },
+    { to: "/services", label: t("services") },
+    { to: "/contact", label: t("contact") },
+    { to: "/reschedule", label: t("reschedule") },
+    { to: "/booking", label: t("bookAppointment") },
+  ] as const;
+
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-white/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-8">
@@ -84,7 +87,7 @@ export function Header() {
               href={telHref(CLINIC.phones[0])}
               className="btn-royal mt-2 inline-flex items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold"
             >
-              <Phone className="h-4 w-4" aria-hidden /> Emergency: {CLINIC.phones[0]}
+              <Phone className="h-4 w-4" aria-hidden /> {t("emergencyLabel")} {CLINIC.phones[0]}
             </a>
           </nav>
         </div>

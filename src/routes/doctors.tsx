@@ -11,7 +11,6 @@ import {
   Calendar,
   Stethoscope,
   FileText,
-  Tag,
   CalendarClock,
   History,
   ListChecks,
@@ -33,7 +32,6 @@ import {
 } from "@/lib/bookings";
 import { getAdminEmail, updateCredentials, verifyPin } from "@/lib/admin-credentials";
 import { ALL_SERVICE_ITEMS } from "@/lib/clinic-data";
-import { listPrices, updatePrices } from "@/lib/prices.functions";
 
 /** Escapes a CSV cell, neutralising spreadsheet formula injection. */
 function csvCell(value: string | undefined): string {
@@ -69,7 +67,7 @@ function Admin() {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<StoredBooking[]>([]);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
-  const [tab, setTab] = useState<"appointments" | "history" | "prices" | "api">("appointments");
+  const [tab, setTab] = useState<"appointments" | "history" | "api">("appointments");
   const [query, setQuery] = useState("");
   const [authed, setAuthed] = useState(false);
 
@@ -121,13 +119,12 @@ function Admin() {
       return;
     }
     const rows = [
-      ["Name", "Phone", "Email", "Service", "Price", "Preferred date", "Requested", "Rescheduled", "Status", "Notes"],
+      ["Name", "Phone", "Email", "Service", "Preferred date", "Requested", "Rescheduled", "Status", "Notes"],
       ...bookings.map((b) => [
         b.name,
         b.phone,
         b.email ?? "",
         b.service,
-        b.price ?? "",
         b.date,
         new Date(b.submittedAt).toLocaleString(),
         b.updatedAt ? new Date(b.updatedAt).toLocaleString() : "",
@@ -241,12 +238,6 @@ function Admin() {
               label={`Audit history (${audit.length})`}
             />
             <TabButton
-              active={tab === "prices"}
-              onClick={() => setTab("prices")}
-              icon={<Tag className="h-4 w-4" />}
-              label="Prices"
-            />
-            <TabButton
               active={tab === "api"}
               onClick={() => setTab("api")}
               icon={<Plug className="h-4 w-4" />}
@@ -254,7 +245,7 @@ function Admin() {
             />
           </div>
 
-          {tab !== "prices" && tab !== "api" && (
+          {tab !== "api" && (
             <div className="mt-4 flex items-center gap-3 rounded-full border border-border bg-white/80 px-5 py-3">
               <Search className="h-4 w-4 text-muted-foreground" />
               <input
@@ -273,8 +264,6 @@ function Admin() {
 
         {tab === "api" ? (
           <ApiPanel />
-        ) : tab === "prices" ? (
-          <PricesPanel />
         ) : tab === "history" ? (
 
           <div className="mt-6">
@@ -424,14 +413,7 @@ function Admin() {
                         label="Requested"
                         value={new Date(b.submittedAt).toLocaleString()}
                       />
-                      {b.price && (
-                        <Row
-                          icon={<Tag className="h-4 w-4" />}
-                          label="Price"
-                          value={b.price}
-                        />
-                      )}
-                      {b.updatedAt && (
+                                            {b.updatedAt && (
                         <Row
                           icon={<CalendarClock className="h-4 w-4" />}
                           label="Rescheduled"

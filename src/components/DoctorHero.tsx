@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import doctorImg from "@/assets/doctor-waving.png";
 import { DoctorFallback } from "@/components/DoctorFallback";
+import { useLanguage } from "@/context/LanguageContext";
 
 export function DoctorHero() {
+  const { t } = useLanguage();
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const [nearCursor, setNearCursor] = useState(false);
@@ -134,7 +136,7 @@ export function DoctorHero() {
       <span
         className="pointer-events-none absolute -top-4 left-6 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-primary shadow-lg backdrop-blur"
       >
-        👋 Welcome!
+        👋 {t("welcomeBanner")}
       </span>
     </div>
   );

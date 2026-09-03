@@ -344,10 +344,7 @@ function DatabaseForm({ pin, onSaved }: { pin: string; onSaved: () => void }) {
         <Database className="h-5 w-5" /> Database connection
       </h3>
       <p className="mt-1 text-sm text-muted-foreground">
-        The connection is tested live before it is stored. Your project must already contain a{" "}
-        <code className="rounded bg-muted px-1">service_prices</code> table (columns:
-        <code className="mx-1 rounded bg-muted px-1">title</code> primary key,
-        <code className="mx-1 rounded bg-muted px-1">price</code>).
+        The connection is tested live before it is stored. Your project must already contain the required tables for clinic operations.
       </p>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <Field
