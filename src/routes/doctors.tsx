@@ -23,13 +23,10 @@ import { ApiPanel } from "@/components/ApiPanel";
 import { GlassCard } from "@/components/GlassCard";
 import { toast } from "sonner";
 import {
-  loadBookings,
-  saveBookings,
-  loadAudit,
-  clearAudit,
+  supabase,
   type StoredBooking,
   type AuditEntry,
-} from "@/lib/bookings";
+} from "@/lib/supabase";
 import { getAdminEmail, updateCredentials, verifyPin } from "@/lib/admin-credentials";
 import { ALL_SERVICE_ITEMS } from "@/lib/clinic-data";
 
@@ -78,23 +75,36 @@ function Admin() {
       return;
     }
     setAuthed(true);
-    setBookings(loadBookings());
-    setAudit(loadAudit());
+    fetchBookings();
   }, [navigate]);
+
+  const fetchBookings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("*")
+        .order("submittedAt", { ascending: false });
+
+      if (error) throw error;
+      setBookings(data as StoredBooking[]);
+    } catch (err) {
+      console.error("Failed to fetch bookings from Supabase:", err);
+      toast.error("Could not load appointments from the server.");
+    }
+  };
 
 
   const [credOpen, setCredOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const refresh = () => {
+  const refresh = async () => {
     setRefreshing(true);
-    const list = loadBookings();
-    setBookings(list);
+    await fetchBookings();
     setAudit(loadAudit());
     setQuery("");
     window.setTimeout(() => {
       setRefreshing(false);
-      toast.success(`Refreshed — ${list.length} appointment${list.length === 1 ? "" : "s"}`);
+      toast.success(`Refreshed — ${bookings.length} appointment${bookings.length === 1 ? "" : "s"}`);
     }, 350);
   };
 
@@ -142,17 +152,31 @@ function Admin() {
     navigate({ to: "/" });
   };
 
-  const toggleDone = (id: string) => {
-    const list = loadBookings().map((b) => (b.id === id ? { ...b, done: !b.done } : b));
-    saveBookings(list);
-    setBookings(list);
+  const toggleDone = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("appointments")
+        .update({ done: !bookings.find((b) => b.id === id)?.done ?? false })
+        .eq("id", id);
+
+      if (error) throw error;
+      setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, done: !b.done } : b)));
+    } catch (err) {
+      console.error("Failed to toggle done:", err);
+      toast.error("Could not update appointment status.");
+    }
   };
 
-  const remove = (id: string) => {
+  const remove = async (id: string) => {
     if (!confirm("Delete this appointment?")) return;
-    const list = loadBookings().filter((b) => b.id !== id);
-    saveBookings(list);
-    setBookings(list);
+    try {
+      const { error } = await supabase.from("appointments").delete().eq("id", id);
+      if (error) throw error;
+      setBookings((prev) => prev.filter((b) => b.id !== id));
+    } catch (err) {
+      console.error("Failed to remove appointment:", err);
+      toast.error("Could not delete appointment.");
+    }
   };
 
   const filtered = useMemo(() => {
