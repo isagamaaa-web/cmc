@@ -1,5 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Phone, ArrowRight, Microscope, HeartPulse, Clock, ShieldCheck, Check, Star, MapPin } from "lucide-react";
+import {
+  Phone,
+  ArrowRight,
+  Microscope,
+  HeartPulse,
+  Clock,
+  ShieldCheck,
+  Check,
+  Star,
+  MapPin,
+} from "lucide-react";
 import { DoctorHero } from "@/components/DoctorHero";
 import { HeroBackground } from "@/components/HeroBackground";
 import { GlassCard } from "@/components/GlassCard";
@@ -48,7 +58,6 @@ function Home() {
       <section className="relative isolate overflow-hidden px-4 pb-24 pt-10 md:px-8 md:pt-16">
         <HeroBackground />
         <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-2">
-
           <ScrollReveal>
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-white/70 px-3 py-1 text-xs font-semibold text-primary">
               <ShieldCheck className="h-3.5 w-3.5" /> {t("trustedTag")}
@@ -58,7 +67,11 @@ function Home() {
             </h1>
             <p className="mt-5 max-w-xl text-lg text-muted-foreground">
               {CLINIC.name} — led by <strong className="text-foreground">{CLINIC.doctor}</strong>,{" "}
-              {CLINIC.role}. {t("heroDesc").replace("Central Medium Clinic — led by Dr. Gebeyehu, Internal Medicine Specialist. ", "")}
+              {CLINIC.role}.{" "}
+              {t("heroDesc").replace(
+                "Central Medium Clinic — led by Dr. Gebeyehu, Internal Medicine Specialist. ",
+                "",
+              )}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a
@@ -83,8 +96,12 @@ function Home() {
               </Link>
             </div>
             <div className="mt-8 flex items-center gap-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> {t("hoursBadge")}</div>
-              <div className="flex items-center gap-2"><HeartPulse className="h-4 w-4 text-accent" /> {t("emergencyBadge")}</div>
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-primary" /> {t("hoursBadge")}
+              </div>
+              <div className="flex items-center gap-2">
+                <HeartPulse className="h-4 w-4 text-accent" /> {t("emergencyBadge")}
+              </div>
             </div>
           </ScrollReveal>
           <ScrollReveal delay={100}>
@@ -122,7 +139,10 @@ function Home() {
                     </li>
                   ))}
                 </ul>
-                <Link to="/services" className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-primary">
+                <Link
+                  to="/services"
+                  className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-primary"
+                >
                   View all labs <ArrowRight className="h-4 w-4" />
                 </Link>
               </GlassCard>
@@ -144,7 +164,10 @@ function Home() {
                     </li>
                   ))}
                 </ul>
-                <Link to="/services" className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-primary">
+                <Link
+                  to="/services"
+                  className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-primary"
+                >
                   Explore services <ArrowRight className="h-4 w-4" />
                 </Link>
               </GlassCard>
@@ -221,8 +244,12 @@ function Home() {
             {/* Testimonial */}
             <ScrollReveal delay={120}>
               <div className="relative rounded-[2rem] bg-white p-8 shadow-[0_20px_60px_-20px_rgba(9,125,134,0.35)] md:p-10">
-                <p className="text-2xl italic leading-snug text-[#0F252C] sm:text-3xl" style={{ fontFamily: '"Bebas Neue", serif', letterSpacing: "0.01em" }}>
-                  "THE TEAM AT CMC MADE MY WHOLE FAMILY COMFORTABLE. TRULY A SUPERIOR MEDICAL CARE EXPERIENCE."
+                <p
+                  className="text-2xl italic leading-snug text-[#0F252C] sm:text-3xl"
+                  style={{ fontFamily: '"Bebas Neue", serif', letterSpacing: "0.01em" }}
+                >
+                  "THE TEAM AT CMC MADE MY WHOLE FAMILY COMFORTABLE. TRULY A SUPERIOR MEDICAL CARE
+                  EXPERIENCE."
                 </p>
                 <div className="mt-8 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">

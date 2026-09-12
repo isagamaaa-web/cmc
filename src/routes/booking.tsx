@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { GlassCard } from "@/components/GlassCard";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { ALL_SERVICES } from "@/lib/clinic-data";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { getDeviceId } from "@/lib/bookings";
 import {
   attemptsLeft,
@@ -19,7 +19,6 @@ import {
   resetAttempts,
   verifyPin,
 } from "@/lib/admin-credentials";
-
 
 export const Route = createFileRoute("/booking")({
   head: () => ({
@@ -77,7 +76,12 @@ const schema = z.object({
     .string()
     .min(1, "Please select a service")
     .refine((v) => ALL_SERVICES.includes(v), { message: "Please select a valid service" }),
-  notes: z.string().trim().max(500, "Notes are too long (max 500 characters)").optional().or(z.literal("")),
+  notes: z
+    .string()
+    .trim()
+    .max(500, "Notes are too long (max 500 characters)")
+    .optional()
+    .or(z.literal("")),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -88,6 +92,9 @@ export { loadBookings, saveBookings } from "@/lib/bookings";
 function Booking() {
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(true);
+
+  const today = todayISO();
+  const maxDate = maxDateISO();
 
   useEffect(() => {
     const check = async () => {
@@ -138,19 +145,17 @@ function Booking() {
         done: false,
       };
 
-      const { error } = await supabase
-        .from("appointments")
-        .insert({
-          id: booking.id,
-          name: booking.name,
-          phone: booking.phone,
-          email: booking.email,
-          date: booking.date,
-          service: booking.service,
-          notes: booking.notes,
-          submittedAt: booking.submittedAt,
-          done: false,
-        });
+      const { error } = await supabase.from("appointments").insert({
+        id: booking.id,
+        name: booking.name,
+        phone: booking.phone,
+        email: booking.email,
+        date: booking.date,
+        service: booking.service,
+        notes: booking.notes,
+        submittedAt: booking.submittedAt,
+        done: false,
+      });
 
       if (error) throw error;
 
@@ -160,7 +165,7 @@ function Booking() {
       toast.error(
         isOnline
           ? "We couldn't submit your request. Please try again."
-          : "You're offline. Your booking will be saved locally and synced when back online."
+          : "You're offline. Your booking will be saved locally and synced when back online.",
       );
       navigate({ to: "/booking/error" });
     }
@@ -178,6 +183,14 @@ function Booking() {
       /* ignore */
     }
   }, []);
+
+  const emailValue = watch("email");
+  useEffect(() => {
+    if (emailValue && isAdminEmail(emailValue)) {
+      setPinOpen(true);
+    }
+  }, [emailValue]);
+
   const selectedService = watch("service");
 
   return (
@@ -186,9 +199,8 @@ function Booking() {
         <ScrollReveal>
           <h1 className="text-4xl text-primary sm:text-5xl">Book an Appointment</h1>
           <p className="mt-3 text-lg text-muted-foreground">
-            Reserve your visit with{" "}
-            <strong className="text-foreground">Dr. Gebeyehu</strong>. We'll confirm your booking
-            by phone.
+            Reserve your visit with <strong className="text-foreground">Dr. Gebeyehu</strong>. We'll
+            confirm your booking by phone.
           </p>
         </ScrollReveal>
 
@@ -242,11 +254,7 @@ function Booking() {
                     aria-invalid={!!errors.phone}
                   />
                 </Field>
-                <Field
-                  label="Email (optional)"
-                  htmlFor="email"
-                  error={errors.email?.message}
-                >
+                <Field label="Email (optional)" htmlFor="email" error={errors.email?.message}>
                   <input
                     id="email"
                     type="email"
@@ -296,11 +304,7 @@ function Booking() {
                 </Field>
               </div>
 
-              <Field
-                label="Notes (optional)"
-                htmlFor="notes"
-                error={errors.notes?.message}
-              >
+              <Field label="Notes (optional)" htmlFor="notes" error={errors.notes?.message}>
                 <textarea
                   id="notes"
                   rows={3}
@@ -319,7 +323,8 @@ function Booking() {
                   <>Submitting…</>
                 ) : (
                   <>
-                    <CalendarDays className="h-4 w-4" /> Confirm Booking <Send className="h-4 w-4" />
+                    <CalendarDays className="h-4 w-4" /> Confirm Booking{" "}
+                    <Send className="h-4 w-4" />
                   </>
                 )}
               </button>
@@ -411,7 +416,6 @@ function PinModal({
     }
   };
 
-
   const setDigitAt = (i: number, v: string) => {
     const clean = v.replace(/\D/g, "").slice(-1);
     const next = [...digits];
@@ -448,10 +452,7 @@ function PinModal({
       aria-modal="true"
       aria-labelledby="pin-title"
     >
-      <div
-        className="absolute inset-0 bg-[#0F252C]/70 backdrop-blur-md"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-[#0F252C]/70 backdrop-blur-md" onClick={onClose} />
       <div
         className={`relative w-full max-w-md overflow-hidden rounded-3xl bg-white p-8 shadow-[0_40px_120px_-20px_rgba(9,125,134,0.6)] ${
           shake ? "animate-[shake_0.4s_ease-in-out]" : ""
@@ -465,8 +466,14 @@ function PinModal({
           <X className="h-4 w-4" />
         </button>
 
-        <div className="pointer-events-none absolute -top-24 -right-24 h-56 w-56 rounded-full" style={{ background: "radial-gradient(circle, rgba(14,213,192,0.45), transparent 70%)" }} />
-        <div className="pointer-events-none absolute -bottom-24 -left-24 h-56 w-56 rounded-full" style={{ background: "radial-gradient(circle, rgba(9,125,134,0.35), transparent 70%)" }} />
+        <div
+          className="pointer-events-none absolute -top-24 -right-24 h-56 w-56 rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(14,213,192,0.45), transparent 70%)" }}
+        />
+        <div
+          className="pointer-events-none absolute -bottom-24 -left-24 h-56 w-56 rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(9,125,134,0.35), transparent 70%)" }}
+        />
 
         <div className="relative text-center">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0ED5C0] to-[#097D86] shadow-lg">
@@ -498,8 +505,9 @@ function PinModal({
                   error
                     ? "border-destructive"
                     : d
-                    ? "border-[#0ED5C0] shadow-[0_0_0_3px_rgba(14,213,192,0.2)]"
-                    : "border-border focus:border-[#097D86] focus:shadow-[0_0_0_3px_rgba(9,125,134,0.18)"}
+                      ? "border-[#0ED5C0] shadow-[0_0_0_3px_rgba(14,213,192,0.2)]"
+                      : "border-border focus:border-[#097D86] focus:shadow-[0_0_0_3px_rgba(9,125,134,0.18)"
+                }
                 }`}
                 aria-label={`Digit ${i + 1}`}
               />
@@ -516,7 +524,6 @@ function PinModal({
               {attemptsLeft() === 1 ? "" : "s"} remaining this month.
             </p>
           )}
-
 
           <button
             type="button"

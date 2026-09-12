@@ -25,7 +25,10 @@ export function DoctorFallback() {
       <ellipse cx="200" cy="250" rx="165" ry="205" fill="url(#cmc-halo)" />
       {/* head */}
       <circle cx="200" cy="140" r="62" fill="#8d5524" />
-      <path d="M138 132c6-42 40-62 62-62s56 20 62 62c-18-18-40-26-62-26s-44 8-62 26z" fill="#3b2314" />
+      <path
+        d="M138 132c6-42 40-62 62-62s56 20 62 62c-18-18-40-26-62-26s-44 8-62 26z"
+        fill="#3b2314"
+      />
       {/* body / coat */}
       <path
         d="M108 470c0-96 34-152 92-166 58 14 92 70 92 166z"

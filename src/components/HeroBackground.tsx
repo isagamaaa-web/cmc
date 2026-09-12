@@ -155,8 +155,14 @@ function Capsule({
       }}
     >
       <div className="flex h-9 w-24 overflow-hidden rounded-full shadow-lg">
-        <div className="h-full w-1/2" style={{ background: "linear-gradient(135deg,#3FC7BE,#0E9E97)" }} />
-        <div className="h-full w-1/2" style={{ background: "linear-gradient(135deg,#FFFFFF,#E4F7F6)" }} />
+        <div
+          className="h-full w-1/2"
+          style={{ background: "linear-gradient(135deg,#3FC7BE,#0E9E97)" }}
+        />
+        <div
+          className="h-full w-1/2"
+          style={{ background: "linear-gradient(135deg,#FFFFFF,#E4F7F6)" }}
+        />
       </div>
     </div>
   );
@@ -214,7 +220,12 @@ function Stethoscope({ className }: { className?: string }) {
         strokeWidth="4"
         strokeLinecap="round"
       />
-      <path d="M30 34v8a10 10 0 0 0 20 0v-4" stroke="#12A79E" strokeWidth="4" strokeLinecap="round" />
+      <path
+        d="M30 34v8a10 10 0 0 0 20 0v-4"
+        stroke="#12A79E"
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
       <circle cx="50" cy="26" r="6" fill="#2CC3B8" />
       <circle cx="16" cy="8" r="4" fill="#0E8F8A" />
       <circle cx="44" cy="8" r="4" fill="#0E8F8A" />

@@ -18,15 +18,14 @@ import {
   PlusCircle,
   Download,
   KeyRound,
-  X, Plug } from "lucide-react";
+  X,
+  Plug,
+} from "lucide-react";
 import { ApiPanel } from "@/components/ApiPanel";
 import { GlassCard } from "@/components/GlassCard";
 import { toast } from "sonner";
-import {
-  supabase,
-  type StoredBooking,
-  type AuditEntry,
-} from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
+import type { StoredBooking, AuditEntry } from "@/lib/bookings";
 import { getAdminEmail, updateCredentials, verifyPin } from "@/lib/admin-credentials";
 import { ALL_SERVICE_ITEMS } from "@/lib/clinic-data";
 
@@ -47,8 +46,6 @@ function downloadCsv(filename: string, rows: string[][]) {
   a.click();
   URL.revokeObjectURL(url);
 }
-
-
 
 export const Route = createFileRoute("/doctors")({
   head: () => ({
@@ -93,7 +90,6 @@ function Admin() {
     }
   };
 
-
   const [credOpen, setCredOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -104,7 +100,9 @@ function Admin() {
     setQuery("");
     window.setTimeout(() => {
       setRefreshing(false);
-      toast.success(`Refreshed — ${bookings.length} appointment${bookings.length === 1 ? "" : "s"}`);
+      toast.success(
+        `Refreshed — ${bookings.length} appointment${bookings.length === 1 ? "" : "s"}`,
+      );
     }, 350);
   };
 
@@ -129,7 +127,17 @@ function Admin() {
       return;
     }
     const rows = [
-      ["Name", "Phone", "Email", "Service", "Preferred date", "Requested", "Rescheduled", "Status", "Notes"],
+      [
+        "Name",
+        "Phone",
+        "Email",
+        "Service",
+        "Preferred date",
+        "Requested",
+        "Rescheduled",
+        "Status",
+        "Notes",
+      ],
       ...bookings.map((b) => [
         b.name,
         b.phone,
@@ -146,7 +154,6 @@ function Admin() {
     toast.success(`Exported ${bookings.length} appointment${bookings.length === 1 ? "" : "s"}`);
   };
 
-
   const signOut = () => {
     sessionStorage.removeItem("cmc_admin");
     navigate({ to: "/" });
@@ -154,13 +161,12 @@ function Admin() {
 
   const toggleDone = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from("appointments")
-        .update({ done: !bookings.find((b) => b.id === id)?.done ?? false })
-        .eq("id", id);
+      const booking = bookings.find((b) => b.id === id);
+      const newDone = !booking?.done;
+      const { error } = await supabase.from("appointments").update({ done: newDone }).eq("id", id);
 
       if (error) throw error;
-      setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, done: !b.done } : b)));
+      setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, done: newDone } : b)));
     } catch (err) {
       console.error("Failed to toggle done:", err);
       toast.error("Could not update appointment status.");
@@ -183,9 +189,7 @@ function Admin() {
     const q = query.trim().toLowerCase();
     if (!q) return bookings;
     return bookings.filter((b) =>
-      [b.name, b.phone, b.email ?? "", b.service].some((f) =>
-        f.toLowerCase().includes(q),
-      ),
+      [b.name, b.phone, b.email ?? "", b.service].some((f) => f.toLowerCase().includes(q)),
     );
   }, [bookings, query]);
 
@@ -198,7 +202,6 @@ function Admin() {
       ),
     );
   }, [audit, query]);
-
 
   if (!authed) return null;
 
@@ -245,7 +248,6 @@ function Admin() {
                 <LogOut className="h-4 w-4" /> Sign out
               </button>
             </div>
-
           </div>
 
           <div className="mt-6 flex flex-wrap gap-2">
@@ -289,7 +291,6 @@ function Admin() {
         {tab === "api" ? (
           <ApiPanel />
         ) : tab === "history" ? (
-
           <div className="mt-6">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-muted-foreground">
@@ -375,93 +376,91 @@ function Admin() {
             )}
           </div>
         ) : (
-        <div className="mt-6">
-          <p className="mb-3 text-sm text-muted-foreground">
-            Showing <strong className="text-foreground">{filtered.length}</strong> of{" "}
-            {bookings.length}
-          </p>
+          <div className="mt-6">
+            <p className="mb-3 text-sm text-muted-foreground">
+              Showing <strong className="text-foreground">{filtered.length}</strong> of{" "}
+              {bookings.length}
+            </p>
 
-          {filtered.length === 0 ? (
-            <GlassCard className="p-10 text-center text-muted-foreground">
-              No appointments yet.
-            </GlassCard>
-          ) : (
-            <ul className="space-y-4">
-              {filtered.map((b) => (
-                <li key={b.id}>
-                  <GlassCard className="p-6">
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div>
-                        <h2 className="text-xl font-bold uppercase text-foreground">
-                          {b.name}
-                        </h2>
-                        <div className="mt-1 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-primary">
-                          <Stethoscope className="h-4 w-4" /> {b.service}
+            {filtered.length === 0 ? (
+              <GlassCard className="p-10 text-center text-muted-foreground">
+                No appointments yet.
+              </GlassCard>
+            ) : (
+              <ul className="space-y-4">
+                {filtered.map((b) => (
+                  <li key={b.id}>
+                    <GlassCard className="p-6">
+                      <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div>
+                          <h2 className="text-xl font-bold uppercase text-foreground">{b.name}</h2>
+                          <div className="mt-1 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-primary">
+                            <Stethoscope className="h-4 w-4" /> {b.service}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {b.done && (
+                            <span className="rounded-full bg-accent/30 px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary">
+                              Done
+                            </span>
+                          )}
+                          <button
+                            onClick={() => toggleDone(b.id)}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-white px-3 py-1.5 text-sm font-semibold text-primary hover:bg-primary/10"
+                          >
+                            <CheckCircle2 className="h-4 w-4" />
+                            {b.done ? "Undo" : "Mark done"}
+                          </button>
+                          <button
+                            onClick={() => remove(b.id)}
+                            aria-label="Delete"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-destructive/40 text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {b.done && (
-                          <span className="rounded-full bg-accent/30 px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary">
-                            Done
-                          </span>
+
+                      <dl className="mt-5 grid gap-4 sm:grid-cols-2">
+                        <Row icon={<Phone className="h-4 w-4" />} label="Phone" value={b.phone} />
+                        {b.email && (
+                          <Row icon={<Mail className="h-4 w-4" />} label="Email" value={b.email} />
                         )}
-                        <button
-                          onClick={() => toggleDone(b.id)}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-white px-3 py-1.5 text-sm font-semibold text-primary hover:bg-primary/10"
-                        >
-                          <CheckCircle2 className="h-4 w-4" />
-                          {b.done ? "Undo" : "Mark done"}
-                        </button>
-                        <button
-                          onClick={() => remove(b.id)}
-                          aria-label="Delete"
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-destructive/40 text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <dl className="mt-5 grid gap-4 sm:grid-cols-2">
-                      <Row icon={<Phone className="h-4 w-4" />} label="Phone" value={b.phone} />
-                      {b.email && (
-                        <Row icon={<Mail className="h-4 w-4" />} label="Email" value={b.email} />
-                      )}
-                      <Row
-                        icon={<Calendar className="h-4 w-4" />}
-                        label="Preferred date"
-                        value={b.date}
-                      />
-                      <Row
-                        icon={<Calendar className="h-4 w-4" />}
-                        label="Requested"
-                        value={new Date(b.submittedAt).toLocaleString()}
-                      />
-                                            {b.updatedAt && (
                         <Row
-                          icon={<CalendarClock className="h-4 w-4" />}
-                          label="Rescheduled"
-                          value={new Date(b.updatedAt).toLocaleString()}
+                          icon={<Calendar className="h-4 w-4" />}
+                          label="Preferred date"
+                          value={b.date}
                         />
-                      )}
-                    </dl>
+                        <Row
+                          icon={<Calendar className="h-4 w-4" />}
+                          label="Requested"
+                          value={new Date(b.submittedAt).toLocaleString()}
+                        />
+                        {b.updatedAt && (
+                          <Row
+                            icon={<CalendarClock className="h-4 w-4" />}
+                            label="Rescheduled"
+                            value={new Date(b.updatedAt).toLocaleString()}
+                          />
+                        )}
+                      </dl>
 
-                    {b.notes && (
-                      <div className="mt-5 rounded-xl bg-white/70 p-4">
-                        <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          <FileText className="h-3.5 w-3.5" /> Notes
+                      {b.notes && (
+                        <div className="mt-5 rounded-xl bg-white/70 p-4">
+                          <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            <FileText className="h-3.5 w-3.5" /> Notes
+                          </div>
+                          <p className="mt-1 text-sm text-foreground whitespace-pre-wrap">
+                            {b.notes}
+                          </p>
                         </div>
-                        <p className="mt-1 text-sm text-foreground whitespace-pre-wrap">
-                          {b.notes}
-                        </p>
-                      </div>
-                    )}
-                  </GlassCard>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+                      )}
+                    </GlassCard>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         )}
       </div>
 
@@ -531,7 +530,10 @@ function CredentialsModal({ open, onClose }: { open: boolean; onClose: () => voi
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0ED5C0] to-[#097D86] shadow-lg">
           <KeyRound className="h-8 w-8 text-white" strokeWidth={2.4} />
         </div>
-        <h2 id="cred-title" className="mt-4 text-center text-2xl font-bold uppercase text-[#0B4A55]">
+        <h2
+          id="cred-title"
+          className="mt-4 text-center text-2xl font-bold uppercase text-[#0B4A55]"
+        >
           Reset admin password
         </h2>
         <p className="mt-1 text-center text-xs text-muted-foreground">
@@ -604,7 +606,6 @@ function CredentialsModal({ open, onClose }: { open: boolean; onClose: () => voi
   );
 }
 
-
 function TabButton({
   active,
   onClick,
@@ -630,15 +631,7 @@ function TabButton({
   );
 }
 
-function Row({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
+function Row({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="flex items-start gap-3">
       <div className="mt-0.5 text-primary">{icon}</div>
@@ -714,8 +707,8 @@ function PricesPanel() {
           <div>
             <h2 className="text-xl font-bold text-primary">Service prices</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Changes publish to the shared clinic database and appear on every visitor's
-              device immediately.
+              Changes publish to the shared clinic database and appear on every visitor's device
+              immediately.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -756,9 +749,7 @@ function PricesPanel() {
               <input
                 value={rows[item.title] ?? ""}
                 maxLength={60}
-                onChange={(e) =>
-                  setRows((prev) => ({ ...prev, [item.title]: e.target.value }))
-                }
+                onChange={(e) => setRows((prev) => ({ ...prev, [item.title]: e.target.value }))}
                 className={`rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:border-primary ${
                   rows[item.title] !== initial[item.title]
                     ? "border-primary ring-2 ring-primary/20"

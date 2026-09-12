@@ -19,7 +19,9 @@ const PRICE = z
 
 export const listPrices = createServerFn({ method: "GET" }).handler(async () => {
   const { getDataClient } = await import("@/lib/integrations.server");
-  const { data, error } = await (await getDataClient())
+  const { data, error } = await (
+    await getDataClient()
+  )
     .from("service_prices")
     .select("title, price")
     .order("title");
@@ -50,7 +52,10 @@ export const updatePrices = createServerFn({ method: "POST" })
     z
       .object({
         pin: z.string().regex(/^[0-9]{6}$/),
-        updates: z.array(z.object({ title: TITLE, price: PRICE })).min(1).max(50),
+        updates: z
+          .array(z.object({ title: TITLE, price: PRICE }))
+          .min(1)
+          .max(50),
       })
       .parse(data),
   )
@@ -61,7 +66,8 @@ export const updatePrices = createServerFn({ method: "POST" })
       req.headers.get("cf-connecting-ip") ??
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
       "unknown";
-    if (throttled(ip)) return { ok: false as const, error: "Too many attempts. Try again shortly." };
+    if (throttled(ip))
+      return { ok: false as const, error: "Too many attempts. Try again shortly." };
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { getDataClient } = await import("@/lib/integrations.server");

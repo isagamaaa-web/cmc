@@ -82,7 +82,6 @@ export function getDeviceId(): string {
   }
 }
 
-
 /** True when a stored booking belongs to this device (UUID or fingerprint match). */
 export function isSameDevice(bookingDeviceId: string | undefined, deviceId: string) {
   if (!bookingDeviceId) return false;
@@ -209,4 +208,3 @@ export function findMyBooking(): StoredBooking | undefined {
   const id = getDeviceId();
   return loadBookings().find((b) => isSameDevice(b.deviceId, id));
 }
-

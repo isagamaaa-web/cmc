@@ -50,3 +50,4 @@ Ensure you have [Bun](https://bun.sh/) or [Node.js](https://nodejs.org/) install
    ```bash
    git clone [https://github.com/isagamaaa-web/cmc.git](https://github.com/isagamaaa-web/cmc.git)
    cd cmc
+   ```

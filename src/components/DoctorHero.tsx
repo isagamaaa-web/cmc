@@ -11,11 +11,16 @@ export function DoctorHero() {
   const [srcAttempt, setSrcAttempt] = useState(0);
   const [failed, setFailed] = useState(false);
 
-
   useEffect(() => {
     let raf = 0;
-    let tx = 0, ty = 0, rx = 0, ry = 0;
-    let ttx = 0, tty = 0, trx = 0, tryv = 0;
+    let tx = 0,
+      ty = 0,
+      rx = 0,
+      ry = 0;
+    let ttx = 0,
+      tty = 0,
+      trx = 0,
+      tryv = 0;
     const PROXIMITY = 320; // px
 
     const onMove = (e: MouseEvent) => {
@@ -37,7 +42,10 @@ export function DoctorHero() {
         trx = -ny * 10;
         tryv = nx * 14;
       } else {
-        ttx = 0; tty = 0; trx = 0; tryv = 0;
+        ttx = 0;
+        tty = 0;
+        trx = 0;
+        tryv = 0;
       }
     };
 
@@ -130,12 +138,9 @@ export function DoctorHero() {
             style={{ transition: "transform 0.05s linear", transformStyle: "preserve-3d" }}
           />
         )}
-
       </div>
 
-      <span
-        className="pointer-events-none absolute -top-4 left-6 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-primary shadow-lg backdrop-blur"
-      >
+      <span className="pointer-events-none absolute -top-4 left-6 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-primary shadow-lg backdrop-blur">
         👋 {t("welcomeBanner")}
       </span>
     </div>

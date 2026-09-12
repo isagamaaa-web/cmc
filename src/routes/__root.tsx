@@ -21,7 +21,6 @@ import { OfflineCache } from "@/components/OfflineCache";
 import { OfflineSync } from "@/components/OfflineSync";
 import { LanguageProvider } from "@/context/LanguageContext";
 
-
 import { Toaster } from "@/components/ui/sonner";
 import { CLINIC } from "@/lib/clinic-data";
 
@@ -182,7 +181,6 @@ function RootComponent() {
         <OfflineSync />
 
         <Toaster />
-
       </QueryClientProvider>
     </LanguageProvider>
   );

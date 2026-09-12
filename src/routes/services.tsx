@@ -2,13 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Microscope, HeartPulse, ArrowRight, Stethoscope } from "lucide-react";
 import { GlassCard } from "@/components/GlassCard";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import {
-  LAB_PANEL_ITEMS,
-  CLINICAL_SERVICE_ITEMS,
-  CLINIC,
-} from "@/lib/clinic-data";
+import { LAB_PANEL_ITEMS, CLINICAL_SERVICE_ITEMS, CLINIC } from "@/lib/clinic-data";
 import { useLanguage } from "@/context/LanguageContext";
-
 
 const FAQS = [
   {
@@ -99,8 +94,8 @@ function Services() {
             Come visit us — we care about your health.
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-            Comprehensive laboratory testing and specialist clinical care — processed
-            in-house, delivered without the runaround.
+            Comprehensive laboratory testing and specialist clinical care — processed in-house,
+            delivered without the runaround.
           </p>
         </ScrollReveal>
 
@@ -111,9 +106,7 @@ function Services() {
               <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-accent/25 text-primary">
                 <HeartPulse className="h-5 w-5" />
               </div>
-              <h2 className="text-2xl text-primary sm:text-3xl">
-                Clinical & Imaging Services
-              </h2>
+              <h2 className="text-2xl text-primary sm:text-3xl">Clinical & Imaging Services</h2>
             </div>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {CLINICAL_SERVICE_ITEMS.map((item, i) => (
@@ -122,12 +115,8 @@ function Services() {
                     <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                       <Stethoscope className="h-5 w-5" />
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground">
-                      {item.title}
-                    </h3>
-                    <p className="mt-1.5 text-sm text-muted-foreground">
-                      {item.description}
-                    </p>
+                    <h3 className="text-lg font-semibold text-foreground">{item.title}</h3>
+                    <p className="mt-1.5 text-sm text-muted-foreground">{item.description}</p>
                   </GlassCard>
                 </ScrollReveal>
               ))}
@@ -153,12 +142,8 @@ function Services() {
                         {item.code}
                       </span>
                     )}
-                    <h3 className="mt-3 text-lg font-semibold text-foreground">
-                      {item.title}
-                    </h3>
-                    <p className="mt-1.5 text-sm text-muted-foreground">
-                      {item.description}
-                    </p>
+                    <h3 className="mt-3 text-lg font-semibold text-foreground">{item.title}</h3>
+                    <p className="mt-1.5 text-sm text-muted-foreground">{item.description}</p>
                   </GlassCard>
                 </ScrollReveal>
               ))}
@@ -172,8 +157,8 @@ function Services() {
             <div>
               <h3 className="text-2xl text-primary">Not sure which test you need?</h3>
               <p className="mt-2 max-w-xl text-muted-foreground">
-                Book a consultation and Dr. Gebeyehu will recommend the right panel for
-                your situation.
+                Book a consultation and Dr. Gebeyehu will recommend the right panel for your
+                situation.
               </p>
             </div>
             <Link

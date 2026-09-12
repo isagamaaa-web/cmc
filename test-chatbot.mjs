@@ -1,9 +1,9 @@
-import { loadEnvFile } from 'bun';
+import { loadEnvFile } from "bun";
 
 // Load .env
-loadEnvFile('.env');
+loadEnvFile(".env");
 
-const apiKey = process.env['CHATBOT_API_KEY'];
+const apiKey = process.env["CHATBOT_API_KEY"];
 const baseUrl = "https://ai.gateway.lovable.dev/v1";
 const model = "google/gemini-2.5-flash";
 
@@ -11,7 +11,7 @@ console.log("Config:", {
   apiKeyPresent: !!apiKey,
   keyPrefix: apiKey?.slice(0, 10),
   baseUrl,
-  model
+  model,
 });
 
 if (!apiKey) {
@@ -21,14 +21,14 @@ if (!apiKey) {
 
 console.log("\nTesting API call...");
 const res = await fetch(`${baseUrl}/chat/completions`, {
-  method: 'POST',
+  method: "POST",
   headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${apiKey}`,
   },
   body: JSON.stringify({
     model,
-    messages: [{ role: 'user', content: 'Hello, this is a test. Reply briefly.' }],
+    messages: [{ role: "user", content: "Hello, this is a test. Reply briefly." }],
     max_tokens: 50,
   }),
 });

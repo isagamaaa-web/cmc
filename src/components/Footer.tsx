@@ -18,8 +18,8 @@ export function Footer() {
             />
           </Link>
           <p className="mt-3 max-w-xs text-sm text-muted-foreground">
-            {CLINIC.name} — led by {CLINIC.doctor}, {CLINIC.role}. Complete medical care, day
-            and night.
+            {CLINIC.name} — led by {CLINIC.doctor}, {CLINIC.role}. Complete medical care, day and
+            night.
           </p>
         </div>
         <div>
@@ -44,11 +44,31 @@ export function Footer() {
         <div>
           <h3 className="text-lg text-primary">Explore</h3>
           <ul className="mt-3 grid grid-cols-2 gap-1 text-sm">
-            <li><Link to="/" className="hover:text-primary">{t("home")}</Link></li>
-            <li><Link to="/about" className="hover:text-primary">{t("about")}</Link></li>
-            <li><Link to="/services" className="hover:text-primary">{t("services")}</Link></li>
-            <li><Link to="/booking" className="hover:text-primary">{t("bookAppointment")}</Link></li>
-            <li><Link to="/contact" className="hover:text-primary">{t("contact")}</Link></li>
+            <li>
+              <Link to="/" className="hover:text-primary">
+                {t("home")}
+              </Link>
+            </li>
+            <li>
+              <Link to="/about" className="hover:text-primary">
+                {t("about")}
+              </Link>
+            </li>
+            <li>
+              <Link to="/services" className="hover:text-primary">
+                {t("services")}
+              </Link>
+            </li>
+            <li>
+              <Link to="/booking" className="hover:text-primary">
+                {t("bookAppointment")}
+              </Link>
+            </li>
+            <li>
+              <Link to="/contact" className="hover:text-primary">
+                {t("contact")}
+              </Link>
+            </li>
           </ul>
         </div>
       </div>

@@ -35,10 +35,7 @@ async function encKey(): Promise<CryptoKey> {
   const secret = process.env["APP_SETTINGS_ENC_KEY"];
   if (!secret) throw new Error("Missing APP_SETTINGS_ENC_KEY");
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(secret));
-  return crypto.subtle.importKey("raw", digest, { name: "AES-GCM" }, false, [
-    "encrypt",
-    "decrypt",
-  ]);
+  return crypto.subtle.importKey("raw", digest, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
 }
 
 function toB64(bytes: Uint8Array): string {
@@ -111,10 +108,12 @@ async function readSetting<T>(key: string): Promise<T | null> {
 
 async function writeSetting(key: string, value: unknown): Promise<void> {
   const db = await admin();
-  const { error } = await db.from("app_settings").upsert(
-    { key, value: await encrypt(JSON.stringify(value)), updated_at: new Date().toISOString() },
-    { onConflict: "key" },
-  );
+  const { error } = await db
+    .from("app_settings")
+    .upsert(
+      { key, value: await encrypt(JSON.stringify(value)), updated_at: new Date().toISOString() },
+      { onConflict: "key" },
+    );
   if (error) throw new Error(error.message);
   cache.delete(key);
 }
@@ -205,9 +204,9 @@ export async function resetChatbotConfig(): Promise<void> {
 export async function testChatbotConfig(cfg: ChatbotSettings): Promise<string | null> {
   try {
     if (isFallbackApiKey(cfg.apiKey)) {
-    return "This API key is not valid. A Lovable AI Gateway key must start with sk_ or sk-.";
-  }
-  const res = await fetch(`${cfg.baseUrl.replace(/\/+$/, "")}/chat/completions`, {
+      return "This API key is not valid. A Lovable AI Gateway key must start with sk_ or sk-.";
+    }
+    const res = await fetch(`${cfg.baseUrl.replace(/\/+$/, "")}/chat/completions`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${cfg.apiKey}` },
       body: JSON.stringify({
@@ -266,8 +265,7 @@ export async function testDatabaseConfig(cfg: DatabaseSettings): Promise<string 
     });
     if (res.ok) return null;
     if (res.status === 401 || res.status === 403) return "The project rejected the secret key.";
-    if (res.status === 404)
-      return "Connected, but this project has no `bookings` table yet.";
+    if (res.status === 404) return "Connected, but this project has no `bookings` table yet.";
     return `Database responded with error ${res.status}.`;
   } catch {
     return "Could not reach that project URL.";

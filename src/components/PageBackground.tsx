@@ -57,8 +57,7 @@ export function PageBackground() {
       <div
         className="absolute left-[-8%] top-[35%] h-[420px] w-[420px] rounded-full opacity-70 bg-drift-slow"
         style={{
-          background:
-            "radial-gradient(circle, rgba(14,213,192,0.22) 0%, rgba(14,213,192,0) 70%)",
+          background: "radial-gradient(circle, rgba(14,213,192,0.22) 0%, rgba(14,213,192,0) 70%)",
           filter: "blur(30px)",
         }}
       />
@@ -111,11 +110,21 @@ function Capsule({
   return (
     <div
       className={className}
-      style={{ transform: `rotate(${rotate}deg) scale(${scale})`, filter: `blur(${blur}px)`, opacity: 0.45 }}
+      style={{
+        transform: `rotate(${rotate}deg) scale(${scale})`,
+        filter: `blur(${blur}px)`,
+        opacity: 0.45,
+      }}
     >
       <div className="flex h-9 w-24 overflow-hidden rounded-full shadow-lg">
-        <div className="h-full w-1/2" style={{ background: "linear-gradient(135deg,#3FC7BE,#0E9E97)" }} />
-        <div className="h-full w-1/2" style={{ background: "linear-gradient(135deg,#FFFFFF,#E4F7F6)" }} />
+        <div
+          className="h-full w-1/2"
+          style={{ background: "linear-gradient(135deg,#3FC7BE,#0E9E97)" }}
+        />
+        <div
+          className="h-full w-1/2"
+          style={{ background: "linear-gradient(135deg,#FFFFFF,#E4F7F6)" }}
+        />
       </div>
     </div>
   );

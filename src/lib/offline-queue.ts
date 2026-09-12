@@ -44,7 +44,10 @@ function saveQueue(list: QueuedItem[]) {
 }
 
 export function queueBooking(payload: StoredBooking) {
-  saveQueue([...loadQueue(), { id: newId(), kind: "booking", at: new Date().toISOString(), payload }]);
+  saveQueue([
+    ...loadQueue(),
+    { id: newId(), kind: "booking", at: new Date().toISOString(), payload },
+  ]);
 }
 
 export function queueReschedule(bookingId: string, payload: Partial<StoredBooking>) {

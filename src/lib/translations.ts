@@ -11,7 +11,8 @@ export const translations = {
     trustedTag: "Trusted Internal Medicine",
     heroTitle1: "24/7 COMPLETE",
     heroTitle2: "MEDICAL CARE",
-    heroDesc: "Central Medium Clinic — led by Dr. Gebeyehu, Internal Medicine Specialist. Round-the-clock diagnostics, imaging, and specialist care.",
+    heroDesc:
+      "Central Medium Clinic — led by Dr. Gebeyehu, Internal Medicine Specialist. Round-the-clock diagnostics, imaging, and specialist care.",
     emergencyLabel: "Emergency:",
     hoursBadge: "24 Hours / 7 Days",
     emergencyBadge: "Emergency ready",
@@ -32,33 +33,38 @@ export const translations = {
     submitting: "Submitting…",
     // Reschedule page
     rescheduleTitle: "Reschedule Your Appointment",
-    rescheduleSubtitle: "We recognised this device — hello, {name}. Update your preferred date, phone number or service below.",
+    rescheduleSubtitle:
+      "We recognised this device — hello, {name}. Update your preferred date, phone number or service below.",
     currentBooking: "Current booking:",
     newPreferredDate: "New preferred date",
     saveChanges: "Save new details",
     needHelp: "Need help? Call {phone} — we're open {hours}.",
     // About page
     aboutTitle: "About {clinicName}",
-    aboutSubtitle: "A modern, community-rooted clinic delivering complete internal medicine care — available every hour of every day.",
+    aboutSubtitle:
+      "A modern, community-rooted clinic delivering complete internal medicine care — available every hour of every day.",
     specialistTitle: "Internal Medicine Specialist",
     patientFirst: "Patient-first, evidence-based care",
     roundTheClock: "Round-the-clock availability",
     fullLabImaging: "Full lab & imaging on-site",
     // Home page additional
     ourCareOrganized: "Our Care, Organized",
-    twoPillars: "Two pillars of service — from precise lab diagnostics to advanced specialist care.",
+    twoPillars:
+      "Two pillars of service — from precise lab diagnostics to advanced specialist care.",
     diagnosticLab: "Diagnostic & Lab Testing",
     fullSpectrumLab: "Full-spectrum laboratory panels for early detection and confident treatment.",
     viewAllLabs: "View all labs",
     advancedCare: "Advanced Care & Specialist Services",
-    specialistConsultations: "Specialist consultations, imaging, and cardiac care led by Dr. Gebeyehu.",
+    specialistConsultations:
+      "Specialist consultations, imaging, and cardiac care led by Dr. Gebeyehu.",
     exploreServices: "Explore services",
     needCareNow: "Need care right now?",
     teamOnCall: "Our team is on call 24/7 — reach us instantly.",
     whyCMC: "Why CMC",
     comprehensiveCare: "COMPREHENSIVE MEDICAL CARE, CENTERED ON YOU.",
     modernEquipment: "Modern equipment",
-    modernEquipmentDesc: "Advanced diagnostic tools, including imaging and modern labs you can trust.",
+    modernEquipmentDesc:
+      "Advanced diagnostic tools, including imaging and modern labs you can trust.",
     caringSpecialists: "Caring specialists",
     caringSpecialistsDesc: "Our multidisciplinary team of experienced doctors and staff.",
     readyToSchedule: "READY TO SCHEDULE YOUR APPOINTMENT?",
@@ -70,10 +76,12 @@ export const translations = {
     clinicalImaging: "Clinical & Imaging Services",
     laboratoryPanels: "Laboratory Panels",
     notSureWhichTest: "Not sure which test you need?",
-    bookConsultation: "Book a consultation and Dr. Gebeyehu will recommend the right panel for your situation.",
+    bookConsultation:
+      "Book a consultation and Dr. Gebeyehu will recommend the right panel for your situation.",
     bookConsultationBtn: "Book Consultation",
     // Contact page
-    contactSubtitle: "We're here around the clock. Reach {clinicName} by phone or visit us in person.",
+    contactSubtitle:
+      "We're here around the clock. Reach {clinicName} by phone or visit us in person.",
     callUs: "Call Us",
     findUs: "Find Us",
     // Chatbot
@@ -81,9 +89,12 @@ export const translations = {
     chatTitle: "Central Clinic AI",
     chatStatus: "Online · 24/7",
     chatPlaceholder: "Ask about services, hours, booking…",
-    chatOffline: "You appear to be offline. I can still answer questions about our services, opening hours and location — just ask. For anything else, call 0912-22-49-71.",
-    chatError: "I couldn't reach our assistant just now. I can still help with services, hours and our location — or call 0912-22-49-71 / 0911-48-72-49.",
-    chatRateLimit: "You're sending messages very quickly. Please wait a moment before asking again — or call 0912-22-49-71.",
+    chatOffline:
+      "You appear to be offline. I can still answer questions about our services, opening hours and location — just ask. For anything else, call 0912-22-49-71.",
+    chatError:
+      "I couldn't reach our assistant just now. I can still help with services, hours and our location — or call 0912-22-49-71 / 0911-48-72-49.",
+    chatRateLimit:
+      "You're sending messages very quickly. Please wait a moment before asking again — or call 0912-22-49-71.",
     // Footer / common
     allRightsReserved: "All rights reserved.",
   },
@@ -97,7 +108,8 @@ export const translations = {
     trustedTag: "የታመነ የውስጥ ደዌ ሕክምና",
     heroTitle1: "24/7 ሙሉ",
     heroTitle2: "የሕክምና አገልግሎት",
-    heroDesc: "ሴንትራል ሚዲየም ክሊኒክ — በዶ/ር ገበየሁ የመሩት የውስጥ ደዌ ልዩ ባለሙያ። የሙሉ ጊዜ ምርመራ፣ የራጅ አገልግሎት እና የልዩ ባለሙያ እንክብካቤ።",
+    heroDesc:
+      "ሴንትራል ሚዲየም ክሊኒክ — በዶ/ር ገበየሁ የመሩት የውስጥ ደዌ ልዩ ባለሙያ። የሙሉ ጊዜ ምርመራ፣ የራጅ አገልግሎት እና የልዩ ባለሙያ እንክብካቤ።",
     emergencyLabel: "አስቸኳይ:",
     hoursBadge: "24 ሰዓት / 7 ቀን",
     emergencyBadge: "ለአስቸኳይ ጊዜ ዝግጁ",
@@ -114,12 +126,14 @@ export const translations = {
     trustedTag: "Yaala Keessoo Amanamaa",
     heroTitle1: "24/7 TAJAAJILA YAALAA",
     heroTitle2: "GUUTUU",
-    heroDesc: "Kiliiniika Magaalaa Cehumsaa — Dkt. Gabbayyahuun kan dursamu, ogeessa yaala keessoo. Tajaajila qorannoo, suuraa fakkii fi yaala ogeessa addaa guutuu sa'aatii.",
+    heroDesc:
+      "Kiliiniika Magaalaa Cehumsaa — Dkt. Gabbayyahuun kan dursamu, ogeessa yaala keessoo. Tajaajila qorannoo, suuraa fakkii fi yaala ogeessa addaa guutuu sa'aatii.",
     emergencyLabel: "Ariifachiisaa:",
     hoursBadge: "Saa'aatii 24 / Guyyaa 7",
     emergencyBadge: "Ariifachiisaaf qophii",
     welcomeBanner: "Baga nagaan dhuftan!",
-    chatGreeting: "Akkam, ani gargaaraa Kiliiniika Cehumsaati. Gargaarsa yoo barbaaddan na gaafadhaa.",
+    chatGreeting:
+      "Akkam, ani gargaaraa Kiliiniika Cehumsaati. Gargaarsa yoo barbaaddan na gaafadhaa.",
   },
   ar: {
     home: "الرئيسية",
@@ -131,7 +145,8 @@ export const translations = {
     trustedTag: "طب باطني موثوق",
     heroTitle1: "رعاية طبية متكاملة",
     heroTitle2: "على مدار 24/7",
-    heroDesc: "عيادة سينترال ميديوم - تحت إشراف الدكتور جيبييهو، أخصائي الطب الباطني. تشخيص على مدار الساعة، تصوير طبي، ورعاية متخصصة.",
+    heroDesc:
+      "عيادة سينترال ميديوم - تحت إشراف الدكتور جيبييهو، أخصائي الطب الباطني. تشخيص على مدار الساعة، تصوير طبي، ورعاية متخصصة.",
     emergencyLabel: "الطوارئ:",
     hoursBadge: "24 ساعة / 7 أيام",
     emergencyBadge: "جاهز للطوارئ",
@@ -148,12 +163,14 @@ export const translations = {
     trustedTag: "Daryeelka Bukaanka Gudaha oo Aamin ah",
     heroTitle1: "24/7 DARYEEL CAAFIMAAD",
     heroTitle2: "OO DHAMMEESTIRAN",
-    heroDesc: "Kiliinikada Central Medium — oo uu hoggaaminayo Dr. Gebeyehu, Takhasusle Xanuunnada Gudaha. Baaritaan, sawirro caafimaad, iyo daryeel takhasus leh saacad kasta.",
+    heroDesc:
+      "Kiliinikada Central Medium — oo uu hoggaaminayo Dr. Gebeyehu, Takhasusle Xanuunnada Gudaha. Baaritaan, sawirro caafimaad, iyo daryeel takhasus leh saacad kasta.",
     emergencyLabel: "Xaaladda Degdegga:",
     hoursBadge: "24 Saacadood / 7 Maalmood",
     emergencyBadge: "U diyaar ah xaaladaha degdegga",
     welcomeBanner: "Kuso dhawoow!",
-    chatGreeting: "Salmaan, waxaan ahay kaaliyaha Central Clinic. I weyddii haddii aad caawimaad u baahan tahay.",
+    chatGreeting:
+      "Salmaan, waxaan ahay kaaliyaha Central Clinic. I weyddii haddii aad caawimaad u baahan tahay.",
   },
 } as const;
 

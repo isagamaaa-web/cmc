@@ -11,7 +11,6 @@ import { ALL_SERVICES, CLINIC } from "@/lib/clinic-data";
 import { findMyBooking, updateBooking, type StoredBooking } from "@/lib/bookings";
 import { queueReschedule } from "@/lib/offline-queue";
 
-
 const MAX_DAYS_AHEAD = 60;
 const todayISO = () => new Date().toISOString().split("T")[0];
 const maxDateISO = () => {
@@ -24,7 +23,10 @@ const schema = z.object({
   phone: z
     .string()
     .trim()
-    .regex(/^\+251[0-9]{9}$/, "Phone must start with +251 followed by 9 digits (e.g. +251912224971)"),
+    .regex(
+      /^\+251[0-9]{9}$/,
+      "Phone must start with +251 followed by 9 digits (e.g. +251912224971)",
+    ),
   date: z
     .string()
     .min(1, "Please choose a preferred date")
@@ -120,9 +122,6 @@ function RescheduleForm({
   const selectedService = watch("service");
   const hasErrors = Object.keys(errors).length > 0;
 
-
-
-
   const onSubmit = (values: FormValues) => {
     const patch = {
       phone: values.phone,
@@ -146,15 +145,15 @@ function RescheduleForm({
     navigate({ to: "/booking-success", search: { mode: "reschedule" } });
   };
 
-
   return (
     <section className="px-4 py-16 md:px-8">
       <div className="mx-auto max-w-3xl">
         <ScrollReveal>
           <h1 className="text-4xl text-primary sm:text-5xl">Reschedule Your Appointment</h1>
           <p className="mt-3 text-lg text-muted-foreground">
-            We recognised this device — hello, <strong className="text-foreground">{booking.name}</strong>.
-            Update your preferred date, phone number or service below.
+            We recognised this device — hello,{" "}
+            <strong className="text-foreground">{booking.name}</strong>. Update your preferred date,
+            phone number or service below.
           </p>
         </ScrollReveal>
 
@@ -185,12 +184,17 @@ function RescheduleForm({
             )}
 
             <form
-              onSubmit={handleSubmit(onSubmit, () => toast.error("Please fix the highlighted fields."))}
+              onSubmit={handleSubmit(onSubmit, () =>
+                toast.error("Please fix the highlighted fields."),
+              )}
               className="grid gap-5"
               noValidate
             >
               <div>
-                <label htmlFor="r-phone" className="mb-1.5 block text-sm font-medium text-foreground">
+                <label
+                  htmlFor="r-phone"
+                  className="mb-1.5 block text-sm font-medium text-foreground"
+                >
                   Phone (+251…)
                 </label>
                 <input
@@ -211,7 +215,10 @@ function RescheduleForm({
 
               <div className="grid gap-5 md:grid-cols-2">
                 <div>
-                  <label htmlFor="r-date" className="mb-1.5 block text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="r-date"
+                    className="mb-1.5 block text-sm font-medium text-foreground"
+                  >
                     New preferred date
                   </label>
                   <input
@@ -230,7 +237,10 @@ function RescheduleForm({
                   )}
                 </div>
                 <div>
-                  <label htmlFor="r-service" className="mb-1.5 block text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="r-service"
+                    className="mb-1.5 block text-sm font-medium text-foreground"
+                  >
                     Service
                   </label>
                   <select

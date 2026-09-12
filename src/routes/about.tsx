@@ -27,8 +27,8 @@ function About() {
         <ScrollReveal>
           <h1 className="text-4xl text-primary sm:text-5xl">About {CLINIC.name}</h1>
           <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-            A modern, community-rooted clinic delivering complete internal medicine care —
-            available every hour of every day.
+            A modern, community-rooted clinic delivering complete internal medicine care — available
+            every hour of every day.
           </p>
         </ScrollReveal>
 
@@ -51,10 +51,19 @@ function About() {
                 receive thorough, compassionate attention at every visit.
               </p>
               <ul className="mt-6 grid gap-3 text-sm sm:grid-cols-2">
-                <li className="flex items-start gap-2"><Award className="mt-0.5 h-4 w-4 text-accent" /> Internal Medicine Specialist</li>
-                <li className="flex items-start gap-2"><HeartHandshake className="mt-0.5 h-4 w-4 text-accent" /> Patient-first, evidence-based care</li>
-                <li className="flex items-start gap-2"><Clock className="mt-0.5 h-4 w-4 text-accent" /> Round-the-clock availability</li>
-                <li className="flex items-start gap-2"><Stethoscope className="mt-0.5 h-4 w-4 text-accent" /> Full lab & imaging on-site</li>
+                <li className="flex items-start gap-2">
+                  <Award className="mt-0.5 h-4 w-4 text-accent" /> Internal Medicine Specialist
+                </li>
+                <li className="flex items-start gap-2">
+                  <HeartHandshake className="mt-0.5 h-4 w-4 text-accent" /> Patient-first,
+                  evidence-based care
+                </li>
+                <li className="flex items-start gap-2">
+                  <Clock className="mt-0.5 h-4 w-4 text-accent" /> Round-the-clock availability
+                </li>
+                <li className="flex items-start gap-2">
+                  <Stethoscope className="mt-0.5 h-4 w-4 text-accent" /> Full lab & imaging on-site
+                </li>
               </ul>
             </GlassCard>
           </ScrollReveal>
@@ -66,8 +75,8 @@ function About() {
               </div>
               <h3 className="mt-4 text-xl text-primary">{t("hoursBadge")}</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Whether it's an emergency at midnight or a check-up on a Sunday morning, our team
-                is ready. Care doesn't wait — and neither do we.
+                Whether it's an emergency at midnight or a check-up on a Sunday morning, our team is
+                ready. Care doesn't wait — and neither do we.
               </p>
               <div className="mt-6 rounded-xl bg-primary/5 p-4">
                 <div className="text-3xl font-semibold text-primary">168</div>

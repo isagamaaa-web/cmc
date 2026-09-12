@@ -52,7 +52,6 @@ function BookingSuccess() {
             : `Thank you for scheduling with ${CLINIC.name}. Our team will call you shortly to confirm your appointment details.`}
         </p>
 
-
         <div className="mt-9 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
           <a
             href={telHref(CLINIC.phones[0])}

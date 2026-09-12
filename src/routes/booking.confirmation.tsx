@@ -17,8 +17,14 @@ function Confirmation() {
     <section className="flex min-h-[80vh] items-center justify-center px-4 py-16 md:px-8">
       <div className="relative w-full max-w-3xl overflow-hidden rounded-[2.5rem] bg-white p-8 text-center shadow-[0_40px_120px_-30px_rgba(9,125,134,0.55)] md:p-16">
         {/* Decorative gradient rings */}
-        <div className="pointer-events-none absolute -top-32 -left-32 h-80 w-80 rounded-full bg-gradient-to-br from-teal-bright/40 to-transparent blur-3xl" style={{ background: "radial-gradient(circle, rgba(14,213,192,0.45), transparent 70%)" }} />
-        <div className="pointer-events-none absolute -bottom-32 -right-32 h-80 w-80 rounded-full blur-3xl" style={{ background: "radial-gradient(circle, rgba(9,125,134,0.4), transparent 70%)" }} />
+        <div
+          className="pointer-events-none absolute -top-32 -left-32 h-80 w-80 rounded-full bg-gradient-to-br from-teal-bright/40 to-transparent blur-3xl"
+          style={{ background: "radial-gradient(circle, rgba(14,213,192,0.45), transparent 70%)" }}
+        />
+        <div
+          className="pointer-events-none absolute -bottom-32 -right-32 h-80 w-80 rounded-full blur-3xl"
+          style={{ background: "radial-gradient(circle, rgba(9,125,134,0.4), transparent 70%)" }}
+        />
 
         <div className="relative">
           {/* Giant animated check */}
@@ -38,8 +44,8 @@ function Confirmation() {
             🎉 Your appointment request has been received successfully.
           </p>
           <p className="mx-auto mt-3 max-w-lg text-base text-muted-foreground">
-            Thank you for choosing <strong className="text-[#097D86]">Central Medium Clinic</strong>.
-            Our team will call you shortly to confirm your visit.
+            Thank you for choosing <strong className="text-[#097D86]">Central Medium Clinic</strong>
+            . Our team will call you shortly to confirm your visit.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">

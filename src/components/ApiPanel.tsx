@@ -58,9 +58,9 @@ export function ApiPanel() {
           <div>
             <h2 className="text-xl font-bold text-primary">API &amp; integrations</h2>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Connect your own AI provider key or your own database. Credentials are encrypted
-              and stored server-side only — they are never sent back to any browser and never
-              appear in the website code.
+              Connect your own AI provider key or your own database. Credentials are encrypted and
+              stored server-side only — they are never sent back to any browser and never appear in
+              the website code.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -344,7 +344,8 @@ function DatabaseForm({ pin, onSaved }: { pin: string; onSaved: () => void }) {
         <Database className="h-5 w-5" /> Database connection
       </h3>
       <p className="mt-1 text-sm text-muted-foreground">
-        The connection is tested live before it is stored. Your project must already contain the required tables for clinic operations.
+        The connection is tested live before it is stored. Your project must already contain the
+        required tables for clinic operations.
       </p>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <Field

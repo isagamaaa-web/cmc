@@ -52,28 +52,26 @@ export function LanguageSwitcher() {
 
       // Only load the Google Translate script when actually translating.
       if (!document.getElementById("google-translate-script")) {
-        (window as unknown as { googleTranslateElementInit: () => void }).googleTranslateElementInit =
-          () => {
-            const w = window as unknown as {
-              google: {
-                translate: {
-                  TranslateElement: new (
-                    opts: Record<string, unknown>,
-                    el: string,
-                  ) => void;
-                };
+        (
+          window as unknown as { googleTranslateElementInit: () => void }
+        ).googleTranslateElementInit = () => {
+          const w = window as unknown as {
+            google: {
+              translate: {
+                TranslateElement: new (opts: Record<string, unknown>, el: string) => void;
               };
             };
-            new w.google.translate.TranslateElement(
-              {
-                pageLanguage: "en",
-                includedLanguages: "en,am,om,ar,so",
-                autoDisplay: false,
-                layout: 0,
-              },
-              "google_translate_element",
-            );
           };
+          new w.google.translate.TranslateElement(
+            {
+              pageLanguage: "en",
+              includedLanguages: "en,am,om,ar,so",
+              autoDisplay: false,
+              layout: 0,
+            },
+            "google_translate_element",
+          );
+        };
         const s = document.createElement("script");
         s.id = "google-translate-script";
         s.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
@@ -120,7 +118,10 @@ export function LanguageSwitcher() {
           <Globe className="h-4 w-4" aria-hidden />
           <span className="hidden sm:inline">{active.native}</span>
           <span className="sm:hidden">{active.flag}</span>
-          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
+          <ChevronDown
+            className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}
+            aria-hidden
+          />
         </button>
         {open && (
           <ul

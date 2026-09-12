@@ -60,11 +60,19 @@ function sanitizeInput(text: string): string {
     .replace(/```[\s\S]*?```/g, " ")
     .replace(/<[^>]*>/g, " ")
     .replace(/\b(javascript|data|vbscript)\s*:/gi, " ")
-    .replace(/\b(select|insert|update|delete|drop|union)\b\s+.*?\b(from|into|table|where)\b/gi, " ");
+    .replace(
+      /\b(select|insert|update|delete|drop|union)\b\s+.*?\b(from|into|table|where)\b/gi,
+      " ",
+    );
   for (const re of INJECTION_PATTERNS) out = out.replace(re, "[removed]");
   // Prevent the user from forging or escaping the delimiter fence.
-  out = out.replace(/<<<\s*\/?\s*(END_)?USER_INPUT\s*>>>/gi, "[removed]").replace(/<{3,}|>{3,}/g, " ");
-  return out.replace(/\s{2,}/g, " ").trim().slice(0, 2000);
+  out = out
+    .replace(/<<<\s*\/?\s*(END_)?USER_INPUT\s*>>>/gi, "[removed]")
+    .replace(/<{3,}|>{3,}/g, " ");
+  return out
+    .replace(/\s{2,}/g, " ")
+    .trim()
+    .slice(0, 2000);
 }
 
 /** Best-effort per-instance rate limiting (workers are stateless, so this is one layer of several). */
@@ -93,8 +101,6 @@ function sameOrigin(): boolean {
     return false;
   }
 }
-
-
 
 const SYSTEM_PROMPT = `You are Central Clinic's AI Assistant — the official virtual helper for Central Medium Clinic.
 
@@ -130,12 +136,21 @@ export const chatWithClinicAI = createServerFn({ method: "POST" })
     }
     const ip = getRequestIP({ xForwardedFor: true }) ?? "unknown";
     if (rateLimited(ip)) {
-      return { reply: "You're sending messages very quickly — please wait a moment and try again." };
+      return {
+        reply: "You're sending messages very quickly — please wait a moment and try again.",
+      };
     }
 
     const { getChatbotConfig, getChatbotFallbackReply } = await import("@/lib/integrations.server");
     const ai = await getChatbotConfig();
-    console.log("Chatbot config loaded:", { baseUrl: ai.baseUrl, model: ai.model, custom: ai.custom, apiKeyPresent: !!ai.apiKey, keyPrefix: ai.apiKey?.slice(0, 8), fallback: ai.fallback });
+    console.log("Chatbot config loaded:", {
+      baseUrl: ai.baseUrl,
+      model: ai.model,
+      custom: ai.custom,
+      apiKeyPresent: !!ai.apiKey,
+      keyPrefix: ai.apiKey?.slice(0, 8),
+      fallback: ai.fallback,
+    });
     if (ai.fallback) {
       console.log("[Chatbot] Fallback mode active — serving offline response");
       return { reply: getChatbotFallbackReply() };
@@ -158,7 +173,9 @@ export const chatWithClinicAI = createServerFn({ method: "POST" })
       }))
       .filter((m) => m.content.length > 0);
     if (!safeMessages.length) {
-      return { reply: "Could you rephrase that? I can help with our services, prices, hours and location." };
+      return {
+        reply: "Could you rephrase that? I can help with our services, prices, hours and location.",
+      };
     }
 
     const res = await fetch(`${ai.baseUrl}/chat/completions`, {
@@ -169,21 +186,31 @@ export const chatWithClinicAI = createServerFn({ method: "POST" })
       },
       body: JSON.stringify({
         model: ai.model,
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          ...safeMessages,
-        ],
+        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...safeMessages],
       }),
     });
 
     if (!res.ok) {
       const body = await res.text();
-      console.error("Chatbot API Error:", { status: res.status, statusText: res.statusText, body, baseUrl: ai.baseUrl, model: ai.model, apiKeyPresent: !!ai.apiKey, keyPrefix: ai.apiKey?.slice(0, 6) });
+      console.error("Chatbot API Error:", {
+        status: res.status,
+        statusText: res.statusText,
+        body,
+        baseUrl: ai.baseUrl,
+        model: ai.model,
+        apiKeyPresent: !!ai.apiKey,
+        keyPrefix: ai.apiKey?.slice(0, 6),
+      });
       if (res.status === 429) {
-        return { reply: "I'm receiving a lot of requests right now — please try again in a moment." };
+        return {
+          reply: "I'm receiving a lot of requests right now — please try again in a moment.",
+        };
       }
       if (res.status === 402) {
-        return { reply: "Our AI service needs a top-up. Please call us at 0912-22-49-71 for immediate help." };
+        return {
+          reply:
+            "Our AI service needs a top-up. Please call us at 0912-22-49-71 for immediate help.",
+        };
       }
       throw new Error(`AI gateway ${res.status}: ${body}`);
     }

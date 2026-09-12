@@ -1,4 +1,9 @@
-import { CLINIC, ALL_SERVICE_ITEMS, LAB_PANEL_ITEMS, CLINICAL_SERVICE_ITEMS } from "@/lib/clinic-data";
+import {
+  CLINIC,
+  ALL_SERVICE_ITEMS,
+  LAB_PANEL_ITEMS,
+  CLINICAL_SERVICE_ITEMS,
+} from "@/lib/clinic-data";
 
 /**
  * Offline knowledge base. Answers the most common questions (hours,

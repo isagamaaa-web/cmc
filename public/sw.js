@@ -52,7 +52,7 @@ self.addEventListener("fetch", (event) => {
 
   // Never intercept API routes, server functions, or admin requests
   if (
-    url.pathname.startsWith("/api") || 
+    url.pathname.startsWith("/api") ||
     url.pathname.startsWith("/_serverFn") ||
     url.pathname.startsWith("/doctors")
   ) {
@@ -64,7 +64,10 @@ self.addEventListener("fetch", (event) => {
       fetch(req)
         .then((res) => {
           const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(url.pathname, copy)).catch(() => {});
+          caches
+            .open(CACHE)
+            .then((c) => c.put(url.pathname, copy))
+            .catch(() => {});
           return res;
         })
         .catch(async () => {
@@ -81,7 +84,10 @@ self.addEventListener("fetch", (event) => {
         .then((res) => {
           if (res.ok && res.type === "basic") {
             const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+            caches
+              .open(CACHE)
+              .then((c) => c.put(req, copy))
+              .catch(() => {});
           }
           return res;
         })

@@ -12,8 +12,7 @@ export const Route = createFileRoute("/contact")({
       { title: "Contact — Central Medium Clinic" },
       {
         name: "description",
-        content:
-          "Contact Central Medium Clinic. Call 0912-22-49-71 or 0911-48-72-49 — open 24/7.",
+        content: "Contact Central Medium Clinic. Call 0912-22-49-71 or 0911-48-72-49 — open 24/7.",
       },
     ],
   }),
@@ -148,7 +147,12 @@ function OfflineMap({ link }: { link: string }) {
             <line key={`v${i}`} x1={i * 45} y1="0" x2={i * 45} y2="450" />
           ))}
         </g>
-        <path d="M0 300 C 200 280, 420 240, 800 200" stroke="#8FD8DA" strokeWidth="16" fill="none" />
+        <path
+          d="M0 300 C 200 280, 420 240, 800 200"
+          stroke="#8FD8DA"
+          strokeWidth="16"
+          fill="none"
+        />
         <path d="M330 450 L360 0" stroke="#8FD8DA" strokeWidth="12" fill="none" />
         <circle cx="360" cy="255" r="16" fill="#097D86" />
         <circle cx="360" cy="255" r="30" fill="#097D86" opacity="0.18" />
@@ -159,9 +163,13 @@ function OfflineMap({ link }: { link: string }) {
           Ashawa Meda · next to Salaam Mosque
         </text>
         <circle cx="180" cy="150" r="8" fill="#0ED5C0" />
-        <text x="196" y="156" fill="#0F252C" fontSize="14" opacity="0.7">Gabriel Church</text>
+        <text x="196" y="156" fill="#0F252C" fontSize="14" opacity="0.7">
+          Gabriel Church
+        </text>
         <circle cx="640" cy="360" r="8" fill="#0ED5C0" />
-        <text x="656" y="366" fill="#0F252C" fontSize="14" opacity="0.7">Road to Kusaye</text>
+        <text x="656" y="366" fill="#0F252C" fontSize="14" opacity="0.7">
+          Road to Kusaye
+        </text>
       </svg>
       <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-primary shadow">
         <WifiOff className="h-3.5 w-3.5" /> Offline map
