@@ -92,6 +92,14 @@ function Contact() {
               </div>
               <h2 className="mt-4 text-xl text-primary">Find Us</h2>
               <p className="mt-3 text-sm text-foreground/80">{CLINIC.address}</p>
+              <div className="mt-4 flex justify-center">
+                <img
+                  src="/picc/pic1.jpg"
+                  alt="Central Medium Clinic exterior"
+                  className="rounded-lg border border-border w-full max-w-full h-auto object-cover shadow-2xl"
+                  style={{ maxWidth: "560px", height: "auto", width: "100%" }}
+                />
+              </div>
             </GlassCard>
           </ScrollReveal>
         </div>

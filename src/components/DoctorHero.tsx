@@ -1,71 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import doctorImg from "@/assets/doctor-waving.png";
-import { DoctorFallback } from "@/components/DoctorFallback";
 import { useLanguage } from "@/context/LanguageContext";
 
 export function DoctorHero() {
   const { t } = useLanguage();
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
-  const [nearCursor, setNearCursor] = useState(false);
-  const [srcAttempt, setSrcAttempt] = useState(0);
-  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    let raf = 0;
-    let tx = 0,
-      ty = 0,
-      rx = 0,
-      ry = 0;
-    let ttx = 0,
-      tty = 0,
-      trx = 0,
-      tryv = 0;
-    const PROXIMITY = 320; // px
-
-    const onMove = (e: MouseEvent) => {
-      const el = wrapRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      const dx = e.clientX - cx;
-      const dy = e.clientY - cy;
-      const dist = Math.hypot(dx, dy);
-      const inRange = dist < PROXIMITY;
-      setNearCursor(inRange);
-      if (inRange) {
-        const nx = dx / PROXIMITY;
-        const ny = dy / PROXIMITY;
-        ttx = nx * 18;
-        tty = ny * 14;
-        trx = -ny * 10;
-        tryv = nx * 14;
-      } else {
-        ttx = 0;
-        tty = 0;
-        trx = 0;
-        tryv = 0;
-      }
-    };
-
-    const tick = () => {
-      tx += (ttx - tx) * 0.1;
-      ty += (tty - ty) * 0.1;
-      rx += (trx - rx) * 0.1;
-      ry += (tryv - ry) * 0.1;
-      if (imgRef.current) {
-        imgRef.current.style.transform = `translate3d(${tx}px, ${ty}px, 0) rotateX(${rx}deg) rotateY(${ry}deg)`;
-      }
-      raf = requestAnimationFrame(tick);
-    };
-
-    window.addEventListener("mousemove", onMove, { passive: true });
-    raf = requestAnimationFrame(tick);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      cancelAnimationFrame(raf);
-    };
+    return () => {};
   }, []);
 
   return (
@@ -108,36 +51,20 @@ export function DoctorHero() {
         </span>
       </div>
 
-      <div
-        className="relative doctor-float"
-        style={{
-          transformStyle: "preserve-3d",
-          animation: nearCursor ? "wave-hand 1.2s ease-in-out infinite" : undefined,
-        }}
-      >
-        {failed ? (
-          <DoctorFallback />
-        ) : (
-          <img
-            ref={imgRef}
-            key={srcAttempt}
-            src={srcAttempt === 0 ? doctorImg : `${doctorImg}?retry=1`}
-            alt="Dr. Gebeyehu waving hello — Internal Medicine Specialist at Central Medium Clinic"
-            width={1024}
-            height={1024}
-            loading="eager"
-            decoding="async"
-            fetchPriority="high"
-            onError={() => {
-              // Retry once with a cache-busting query (handles stale/blocked caches),
-              // then fall back to a lightweight inline illustration.
-              setSrcAttempt((n) => (n === 0 ? 1 : n));
-              if (srcAttempt !== 0) setFailed(true);
-            }}
-            className="doctor-depth relative max-h-[560px] w-auto"
-            style={{ transition: "transform 0.05s linear", transformStyle: "preserve-3d" }}
-          />
-        )}
+      <div className="relative doctor-float">
+        <img
+          ref={imgRef}
+          key={1}
+          src={doctorImg}
+          alt="Dr. Gebeyehu waving hello — Internal Medicine Specialist at Central Medium Clinic"
+          width={1024}
+          height={1024}
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
+          className="doctor-depth relative max-h-[560px] w-auto"
+          style={{ transition: "transform 0.05s linear", transformStyle: "preserve-3d" }}
+        />
       </div>
 
       <span className="pointer-events-none absolute -top-4 left-6 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-primary shadow-lg backdrop-blur">
