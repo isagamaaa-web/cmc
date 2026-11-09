@@ -9,7 +9,12 @@ import { GlassCard } from "@/components/GlassCard";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { ALL_SERVICES } from "@/lib/clinic-data";
 import { supabase } from "@/integrations/supabase/client";
-import { getDeviceId } from "@/lib/bookings";
+import { getDeviceId, addBooking, type StoredBooking } from "@/lib/bookings";
+import { queueBooking } from "@/lib/offline-queue";
+
+// Type for Supabase client to avoid `as any` casts when accessing tables not in generated types
+type SupabaseClient = typeof supabase;
+
 import {
   attemptsLeft,
   blockedUntilLabel,
@@ -86,12 +91,10 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-export type { StoredBooking } from "@/lib/bookings";
-export { loadBookings, saveBookings } from "@/lib/bookings";
-
 function Booking() {
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(true);
+  const [isCheckingOnline, setIsCheckingOnline] = useState(true);
 
   const today = todayISO();
   const maxDate = maxDateISO();
@@ -99,16 +102,31 @@ function Booking() {
   useEffect(() => {
     const check = async () => {
       try {
-        const { error } = await supabase.from("appointments").select("id").limit(1);
-        setIsOnline(!error);
-      } catch {
-        setIsOnline(false);
+        const { error } = await (supabase as SupabaseClient)
+          .from("appointments")
+          .select("id")
+          .limit(1);
+        // If error is due to missing table or auth, we might still be online
+        // Only treat as offline if it's a network error
+        const isNetworkError =
+          error &&
+          (error.message?.includes("fetch") ||
+            error.message?.includes("network") ||
+            error.message?.includes("connection") ||
+            error.message?.includes("timeout"));
+        setIsOnline(!isNetworkError);
+      } catch (err) {
+        console.warn("Online check failed:", err);
+        const isNetworkError = err instanceof TypeError && err.message.includes("fetch");
+        setIsOnline(!isNetworkError);
+      } finally {
+        setIsCheckingOnline(false);
       }
     };
     check();
     const interval = setInterval(check, 30000);
     return () => clearInterval(interval);
-  }, [navigate]);
+  }, []);
 
   const {
     register,
@@ -145,29 +163,77 @@ function Booking() {
         done: false,
       };
 
-      const { error } = await supabase.from("appointments").insert({
-        id: booking.id,
-        name: booking.name,
-        phone: booking.phone,
-        email: booking.email,
-        date: booking.date,
-        service: booking.service,
-        notes: booking.notes,
-        submittedAt: booking.submittedAt,
-        done: false,
-      });
+      // Always save locally first for reliability
+      addBooking(booking);
 
-      if (error) throw error;
+      let supabaseError: Error | null = null;
+      try {
+        const { error } = await (supabase as SupabaseClient).from("appointments").insert({
+          id: booking.id,
+          name: booking.name,
+          phone: booking.phone,
+          email: booking.email,
+          date: booking.date,
+          service: booking.service,
+          notes: booking.notes,
+          submitted_at: booking.submittedAt,
+          done: false,
+        });
 
+        if (error) {
+          console.error("Supabase insert error:", error);
+          supabaseError = error;
+        }
+      } catch (err) {
+        console.error("Supabase insert exception:", err);
+        supabaseError = err instanceof Error ? err : new Error(String(err));
+      }
+
+      // Check if it's a network error vs a configuration/permission error
+      const isNetworkError =
+        supabaseError &&
+        (supabaseError.message?.includes("fetch") ||
+          supabaseError.message?.includes("network") ||
+          supabaseError.message?.includes("connection") ||
+          supabaseError.message?.includes("timeout") ||
+          (supabaseError as { cause?: { code?: string } }).cause?.code === "ECONNREFUSED" ||
+          (supabaseError as { cause?: { code?: string } }).cause?.code === "ENOTFOUND");
+
+      // Also check if Supabase is not configured (missing env vars)
+      const isConfigError =
+        supabaseError &&
+        (supabaseError.message?.includes("Missing Supabase") ||
+          supabaseError.message?.includes("environment variable") ||
+          supabaseError.message?.includes("SUPABASE_URL") ||
+          supabaseError.message?.includes("SUPABASE_PUBLISHABLE_KEY"));
+
+      if (supabaseError && !isConfigError) {
+        // If there's a real error (not just missing config), queue for retry
+        if (isNetworkError || !isOnline) {
+          queueBooking(booking);
+          toast.info("Saved locally — will sync when back online.");
+        } else {
+          // Some other Supabase error (permission, RLS, etc.) - still saved locally
+          toast.warning("Saved locally. We'll sync it shortly.");
+        }
+      } else if (!supabaseError) {
+        toast.success("Appointment booked successfully!");
+      }
+
+      // Always navigate to success since we saved locally
       navigate({ to: "/booking-success" });
     } catch (err) {
-      console.error(err);
+      console.error("Booking submission error:", err);
+      // This should rarely happen now since we catch Supabase errors above
+      const isNetworkError = err instanceof TypeError && err.message.includes("fetch");
       toast.error(
-        isOnline
+        isOnline && !isNetworkError
           ? "We couldn't submit your request. Please try again."
           : "You're offline. Your booking will be saved locally and synced when back online.",
       );
-      navigate({ to: "/booking/error" });
+      if (!isOnline || isNetworkError) {
+        navigate({ to: "/booking/error" });
+      }
     }
   };
 
@@ -215,6 +281,19 @@ function Booking() {
 
         <ScrollReveal delay={80}>
           <GlassCard className="mt-10 p-6 md:p-8">
+            {!isOnline && !isCheckingOnline && (
+              <div
+                className="mb-5 flex items-center gap-2 rounded-xl bg-amber/15 border border-amber/40 p-3 text-sm text-amber-800"
+                role="status"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+                You're currently offline. Changes will be saved locally and synced when you're back
+                online.
+              </div>
+            )}
             {hasErrors && (
               <div
                 className="mb-5 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive"

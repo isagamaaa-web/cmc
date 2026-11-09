@@ -151,6 +151,37 @@ function Services() {
           </div>
         </ScrollReveal>
 
+        {/* Our Equipment */}
+        <ScrollReveal delay={60}>
+          <div className="mt-14">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-accent/25 text-primary">
+                <Microscope className="h-5 w-5" />
+              </div>
+              <h2 className="text-2xl text-primary sm:text-3xl">Our Equipment</h2>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"].map((num) => (
+                <ScrollReveal key={`machine-${num}`} delay={80 + Number(num) * 30}>
+                  <GlassCard className="h-full p-4">
+                    <img
+                      src={`/picc/machine (${num}).jpg`}
+                      alt={`Medical machine ${num} at Central Medium Clinic`}
+                      className="w-full h-48 object-cover rounded-md"
+                    />
+                    <div className="p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                        Equipment
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">Medical equipment</p>
+                    </div>
+                  </GlassCard>
+                </ScrollReveal>
+              ))}
+            </div>
+          </div>
+        </ScrollReveal>
+
         {/* CTA */}
         <ScrollReveal delay={80}>
           <GlassCard className="mt-16 flex flex-col items-start gap-4 p-8 md:flex-row md:items-center md:justify-between">

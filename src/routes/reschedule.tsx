@@ -10,6 +10,10 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import { ALL_SERVICES, CLINIC } from "@/lib/clinic-data";
 import { findMyBooking, updateBooking, type StoredBooking } from "@/lib/bookings";
 import { queueReschedule } from "@/lib/offline-queue";
+import { supabase } from "@/integrations/supabase/client";
+
+// Type for Supabase client to avoid `as any` casts when accessing tables not in generated types
+type SupabaseClient = typeof supabase;
 
 const MAX_DAYS_AHEAD = 60;
 const todayISO = () => new Date().toISOString().split("T")[0];
@@ -102,6 +106,35 @@ function RescheduleForm({
   onDone: (b: StoredBooking) => void;
 }) {
   const navigate = useNavigate();
+  const [isOnline, setIsOnline] = useState(true);
+  const [isCheckingOnline, setIsCheckingOnline] = useState(true);
+
+  useEffect(() => {
+    const check = async () => {
+      try {
+        const { error } = await (supabase as SupabaseClient)
+          .from("appointments")
+          .select("id")
+          .limit(1);
+        const isNetworkError =
+          error &&
+          (error.message?.includes("fetch") ||
+            error.message?.includes("network") ||
+            error.message?.includes("connection") ||
+            error.message?.includes("timeout"));
+        setIsOnline(!isNetworkError);
+      } catch (err) {
+        console.warn("Online check failed:", err);
+        const isNetworkError = err instanceof TypeError && err.message.includes("fetch");
+        setIsOnline(!isNetworkError);
+      } finally {
+        setIsCheckingOnline(false);
+      }
+    };
+    check();
+    const interval = setInterval(check, 30000);
+    return () => clearInterval(interval);
+  }, []);
   const {
     register,
     handleSubmit,
@@ -141,6 +174,50 @@ function RescheduleForm({
       navigate({ to: "/booking-success", search: { mode: "reschedule" } });
       return;
     }
+
+    // Also try to sync with Supabase
+    const supabaseUpdate = async () => {
+      try {
+        const { error } = await (supabase as SupabaseClient)
+          .from("appointments")
+          .update({
+            phone: patch.phone,
+            date: patch.date,
+            service: patch.service,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", booking.id);
+
+        if (error) {
+          console.error("Supabase update error:", error);
+          const isNetworkError =
+            error.message?.includes("fetch") ||
+            error.message?.includes("network") ||
+            error.message?.includes("connection") ||
+            error.message?.includes("timeout");
+
+          if (isNetworkError || !isOnline) {
+            queueReschedule(booking.id, patch);
+            toast.info("Saved locally — will sync when back online.");
+          } else {
+            toast.warning("Saved locally. We'll sync it shortly.");
+          }
+        } else {
+          toast.success("Appointment rescheduled successfully!");
+        }
+      } catch (err) {
+        console.error("Supabase update exception:", err);
+        const isNetworkError = err instanceof TypeError && err.message.includes("fetch");
+        if (isNetworkError || !isOnline) {
+          queueReschedule(booking.id, patch);
+          toast.info("Saved locally — will sync when back online.");
+        } else {
+          toast.warning("Saved locally. We'll sync it shortly.");
+        }
+      }
+    };
+
+    supabaseUpdate();
     onDone(updated);
     navigate({ to: "/booking-success", search: { mode: "reschedule" } });
   };
@@ -159,6 +236,19 @@ function RescheduleForm({
 
         <ScrollReveal delay={80}>
           <GlassCard className="mt-8 p-6 md:p-8">
+            {!isOnline && !isCheckingOnline && (
+              <div
+                className="mb-5 flex items-center gap-2 rounded-xl bg-amber/15 border border-amber/40 p-3 text-sm text-amber-800"
+                role="status"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+                You're currently offline. Changes will be saved locally and synced when you're back
+                online.
+              </div>
+            )}
             <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl bg-secondary/60 px-4 py-3 text-sm">
               <Smartphone className="h-4 w-4 text-primary" />
               <span className="text-muted-foreground">Current booking:</span>
