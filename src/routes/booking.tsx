@@ -8,12 +8,9 @@ import { toast } from "sonner";
 import { GlassCard } from "@/components/GlassCard";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { ALL_SERVICES } from "@/lib/clinic-data";
-import { supabase } from "@/integrations/supabase/client";
 import { getDeviceId, addBooking, type StoredBooking } from "@/lib/bookings";
 import { queueBooking } from "@/lib/offline-queue";
-
-// Type for Supabase client to avoid `as any` casts when accessing tables not in generated types
-type SupabaseClient = typeof supabase;
+import { createAppointment } from "@/lib/appointments.functions";
 
 import {
   attemptsLeft,
@@ -93,39 +90,23 @@ type FormValues = z.infer<typeof schema>;
 
 function Booking() {
   const navigate = useNavigate();
+  // Connectivity is a browser signal — never inferred from a third-party API.
+  // Start as online so server and client render the same markup, then sync after mount.
   const [isOnline, setIsOnline] = useState(true);
-  const [isCheckingOnline, setIsCheckingOnline] = useState(true);
+  const [offlineSaved, setOfflineSaved] = useState(false);
 
   const today = todayISO();
   const maxDate = maxDateISO();
 
   useEffect(() => {
-    const check = async () => {
-      try {
-        const { error } = await (supabase as SupabaseClient)
-          .from("appointments")
-          .select("id")
-          .limit(1);
-        // If error is due to missing table or auth, we might still be online
-        // Only treat as offline if it's a network error
-        const isNetworkError =
-          error &&
-          (error.message?.includes("fetch") ||
-            error.message?.includes("network") ||
-            error.message?.includes("connection") ||
-            error.message?.includes("timeout"));
-        setIsOnline(!isNetworkError);
-      } catch (err) {
-        console.warn("Online check failed:", err);
-        const isNetworkError = err instanceof TypeError && err.message.includes("fetch");
-        setIsOnline(!isNetworkError);
-      } finally {
-        setIsCheckingOnline(false);
-      }
+    const update = () => setIsOnline(navigator.onLine);
+    update();
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    return () => {
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
     };
-    check();
-    const interval = setInterval(check, 30000);
-    return () => clearInterval(interval);
   }, []);
 
   const {
@@ -146,95 +127,65 @@ function Booking() {
   const hasErrors = Object.keys(errors).length > 0;
 
   const onSubmit = async (values: FormValues) => {
+    const booking: StoredBooking = {
+      deviceId: getDeviceId(),
+      id:
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      name: values.name,
+      phone: values.phone,
+      date: values.date,
+      service: values.service,
+      email: values.email || undefined,
+      notes: values.notes || undefined,
+      submittedAt: new Date().toISOString(),
+      done: false,
+    };
+
+    // Save on this device first, so a network hiccup can never lose the request.
     try {
-      const booking: StoredBooking = {
-        deviceId: getDeviceId(),
-        id:
-          typeof crypto !== "undefined" && "randomUUID" in crypto
-            ? crypto.randomUUID()
-            : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        name: values.name,
-        phone: values.phone,
-        date: values.date,
-        service: values.service,
-        email: values.email || undefined,
-        notes: values.notes || undefined,
-        submittedAt: new Date().toISOString(),
-        done: false,
-      };
-
-      // Always save locally first for reliability
       addBooking(booking);
+    } catch (err) {
+      console.warn("Could not save booking on this device:", err);
+    }
 
-      let supabaseError: Error | null = null;
-      try {
-        const { error } = await (supabase as SupabaseClient).from("appointments").insert({
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      queueBooking(booking);
+      setOfflineSaved(true);
+      toast.info("You're offline — saved on this device and will sync when you reconnect.");
+      return;
+    }
+
+    try {
+      // Go through our own server, which talks to the database. This avoids
+      // browser-to-Supabase connectivity problems being reported as "offline".
+      const result = await createAppointment({
+        data: {
           id: booking.id,
           name: booking.name,
           phone: booking.phone,
-          email: booking.email,
+          email: booking.email ?? "",
           date: booking.date,
           service: booking.service,
-          notes: booking.notes,
-          submitted_at: booking.submittedAt,
-          done: false,
-        });
+          notes: booking.notes ?? "",
+        },
+      });
 
-        if (error) {
-          console.error("Supabase insert error:", error);
-          supabaseError = error;
-        }
-      } catch (err) {
-        console.error("Supabase insert exception:", err);
-        supabaseError = err instanceof Error ? err : new Error(String(err));
-      }
-
-      // Check if it's a network error vs a configuration/permission error
-      const isNetworkError =
-        supabaseError &&
-        (supabaseError.message?.includes("fetch") ||
-          supabaseError.message?.includes("network") ||
-          supabaseError.message?.includes("connection") ||
-          supabaseError.message?.includes("timeout") ||
-          (supabaseError as { cause?: { code?: string } }).cause?.code === "ECONNREFUSED" ||
-          (supabaseError as { cause?: { code?: string } }).cause?.code === "ENOTFOUND");
-
-      // Also check if Supabase is not configured (missing env vars)
-      const isConfigError =
-        supabaseError &&
-        (supabaseError.message?.includes("Missing Supabase") ||
-          supabaseError.message?.includes("environment variable") ||
-          supabaseError.message?.includes("SUPABASE_URL") ||
-          supabaseError.message?.includes("SUPABASE_PUBLISHABLE_KEY"));
-
-      if (supabaseError && !isConfigError) {
-        // If there's a real error (not just missing config), queue for retry
-        if (isNetworkError || !isOnline) {
-          queueBooking(booking);
-          toast.info("Saved locally — will sync when back online.");
-        } else {
-          // Some other Supabase error (permission, RLS, etc.) - still saved locally
-          toast.warning("Saved locally. We'll sync it shortly.");
-        }
-      } else if (!supabaseError) {
+      if (result.ok) {
         toast.success("Appointment booked successfully!");
+      } else {
+        console.error("Appointment save failed:", result.error);
+        queueBooking(booking);
+        toast.warning("Saved on this device — we'll keep trying to reach the clinic.");
       }
-
-      // Always navigate to success since we saved locally
-      navigate({ to: "/booking-success" });
     } catch (err) {
       console.error("Booking submission error:", err);
-      // This should rarely happen now since we catch Supabase errors above
-      const isNetworkError = err instanceof TypeError && err.message.includes("fetch");
-      toast.error(
-        isOnline && !isNetworkError
-          ? "We couldn't submit your request. Please try again."
-          : "You're offline. Your booking will be saved locally and synced when back online.",
-      );
-      if (!isOnline || isNetworkError) {
-        navigate({ to: "/booking/error" });
-      }
+      queueBooking(booking);
+      toast.warning("Saved on this device — we'll keep trying to reach the clinic.");
     }
+
+    navigate({ to: "/booking-success" });
   };
 
   const [pinOpen, setPinOpen] = useState(false);
@@ -250,14 +201,22 @@ function Booking() {
     }
   }, []);
 
-  const emailValue = watch("email");
-  useEffect(() => {
-    if (emailValue && isAdminEmail(emailValue)) {
-      setPinOpen(true);
-    }
-  }, [emailValue]);
-
   const selectedService = watch("service");
+
+  /**
+   * Admin access opens only when the form is submitted (Confirm button or Enter
+   * in a field) — never while the email address is still being typed.
+   */
+  const submitBookingForm = (event: React.FormEvent<HTMLFormElement>) => {
+    // Always stop the browser's native submit, even if JS is still warming up.
+    event.preventDefault();
+    const email = (getValues("email") ?? "").trim();
+    if (email && isAdminEmail(email)) {
+      setPinOpen(true);
+      return;
+    }
+    void handleSubmit(onSubmit)(event);
+  };
 
   return (
     <section className="px-4 py-16 md:px-8">
@@ -279,137 +238,154 @@ function Booking() {
           </div>
         )}
 
-        <ScrollReveal delay={80}>
-          <GlassCard className="mt-10 p-6 md:p-8">
-            {!isOnline && !isCheckingOnline && (
-              <div
-                className="mb-5 flex items-center gap-2 rounded-xl bg-amber/15 border border-amber/40 p-3 text-sm text-amber-800"
-                role="status"
-              >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                </span>
-                You're currently offline. Changes will be saved locally and synced when you're back
-                online.
-              </div>
-            )}
-            {hasErrors && (
-              <div
-                className="mb-5 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive"
-                role="alert"
-              >
-                <p className="font-semibold">Please fix the following before submitting:</p>
-                <ul className="mt-2 list-disc space-y-1 pl-5">
-                  {Object.entries(errors).map(([field, err]) => (
-                    <li key={field}>
-                      <strong className="capitalize">{field}:</strong> {err?.message as string}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <form onSubmit={handleSubmit(onSubmit)} className="grid gap-5" noValidate>
-              <Field label="Full Name" htmlFor="name" error={errors.name?.message}>
-                <input
-                  id="name"
-                  autoComplete="name"
-                  placeholder="Your full name"
-                  {...register("name")}
-                  className="input"
-                  aria-invalid={!!errors.name}
-                />
-              </Field>
-
-              <div className="grid gap-5 md:grid-cols-2">
-                <Field label="Phone (+251...)" htmlFor="phone" error={errors.phone?.message}>
-                  <input
-                    id="phone"
-                    inputMode="tel"
-                    autoComplete="tel"
-                    placeholder="+251912224971"
-                    {...register("phone")}
-                    className="input"
-                    aria-invalid={!!errors.phone}
-                  />
-                </Field>
-                <Field label="Email (optional)" htmlFor="email" error={errors.email?.message}>
-                  <input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="name@example.com"
-                    {...register("email")}
-                    className="input"
-                    aria-invalid={!!errors.email}
-                  />
-                </Field>
-              </div>
-
-              <div className="grid gap-5 md:grid-cols-2">
-                <Field
-                  label="Preferred Date"
-                  htmlFor="date"
-                  error={errors.date?.message}
-                  hint={`Choose a date between today and ${maxDate}`}
-                >
-                  <input
-                    id="date"
-                    type="date"
-                    min={today}
-                    max={maxDate}
-                    {...register("date")}
-                    className="input"
-                    aria-invalid={!!errors.date}
-                  />
-                </Field>
-                <Field label="Service" htmlFor="service" error={errors.service?.message}>
-                  <select
-                    id="service"
-                    {...register("service")}
-                    className="input"
-                    aria-invalid={!!errors.service}
-                    defaultValue=""
-                  >
-                    <option value="" disabled>
-                      Select a service…
-                    </option>
-                    {ALL_SERVICES.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-              </div>
-
-              <Field label="Notes (optional)" htmlFor="notes" error={errors.notes?.message}>
-                <textarea
-                  id="notes"
-                  rows={3}
-                  maxLength={500}
-                  {...register("notes")}
-                  className="input resize-none"
-                />
-              </Field>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="btn-royal mt-2 inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold disabled:opacity-60"
-              >
-                {isSubmitting ? (
-                  <>Submitting…</>
-                ) : (
-                  <>
-                    <CalendarDays className="h-4 w-4" /> Confirm Booking{" "}
-                    <Send className="h-4 w-4" />
-                  </>
-                )}
-              </button>
-            </form>
+        {offlineSaved ? (
+          <GlassCard className="mt-10 p-8 text-center md:p-10">
+            <ShieldCheck className="mx-auto h-14 w-14 text-primary" />
+            <h2 className="mt-4 text-2xl font-bold text-primary">Request saved on this device</h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+              You're offline right now. Your booking will be sent to the clinic automatically as
+              soon as your connection returns.
+            </p>
+            <button
+              onClick={() => navigate({ to: "/" })}
+              className="btn-royal mt-6 rounded-full px-6 py-3 font-semibold"
+            >
+              Back home
+            </button>
           </GlassCard>
-        </ScrollReveal>
+        ) : (
+          <ScrollReveal delay={80}>
+            <GlassCard className="mt-10 p-6 md:p-8">
+              {!isOnline && (
+                <div
+                  className="mb-5 flex items-center gap-2 rounded-xl bg-amber/15 border border-amber/40 p-3 text-sm text-amber-800"
+                  role="status"
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                  </span>
+                  You're currently offline. Changes will be saved locally and synced when you're
+                  back online.
+                </div>
+              )}
+              {hasErrors && (
+                <div
+                  className="mb-5 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive"
+                  role="alert"
+                >
+                  <p className="font-semibold">Please fix the following before submitting:</p>
+                  <ul className="mt-2 list-disc space-y-1 pl-5">
+                    {Object.entries(errors).map(([field, err]) => (
+                      <li key={field}>
+                        <strong className="capitalize">{field}:</strong> {err?.message as string}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <form onSubmit={submitBookingForm} className="grid gap-5" noValidate>
+                <Field label="Full Name" htmlFor="name" error={errors.name?.message}>
+                  <input
+                    id="name"
+                    autoComplete="name"
+                    placeholder="Your full name"
+                    {...register("name")}
+                    className="input"
+                    aria-invalid={!!errors.name}
+                  />
+                </Field>
+
+                <div className="grid gap-5 md:grid-cols-2">
+                  <Field label="Phone (+251...)" htmlFor="phone" error={errors.phone?.message}>
+                    <input
+                      id="phone"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      placeholder="+251912224971"
+                      {...register("phone")}
+                      className="input"
+                      aria-invalid={!!errors.phone}
+                    />
+                  </Field>
+                  <Field label="Email (optional)" htmlFor="email" error={errors.email?.message}>
+                    <input
+                      id="email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="name@example.com"
+                      {...register("email")}
+                      className="input"
+                      aria-invalid={!!errors.email}
+                    />
+                  </Field>
+                </div>
+
+                <div className="grid gap-5 md:grid-cols-2">
+                  <Field
+                    label="Preferred Date"
+                    htmlFor="date"
+                    error={errors.date?.message}
+                    hint={`Choose a date between today and ${maxDate}`}
+                  >
+                    <input
+                      id="date"
+                      type="date"
+                      min={today}
+                      max={maxDate}
+                      {...register("date")}
+                      className="input"
+                      aria-invalid={!!errors.date}
+                    />
+                  </Field>
+                  <Field label="Service" htmlFor="service" error={errors.service?.message}>
+                    <select
+                      id="service"
+                      {...register("service")}
+                      className="input"
+                      aria-invalid={!!errors.service}
+                      defaultValue=""
+                    >
+                      <option value="" disabled>
+                        Select a service…
+                      </option>
+                      {ALL_SERVICES.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                </div>
+
+                <Field label="Notes (optional)" htmlFor="notes" error={errors.notes?.message}>
+                  <textarea
+                    id="notes"
+                    rows={3}
+                    maxLength={500}
+                    {...register("notes")}
+                    className="input resize-none"
+                  />
+                </Field>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn-royal mt-2 inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold disabled:opacity-60"
+                >
+                  {isSubmitting ? (
+                    <>Submitting…</>
+                  ) : (
+                    <>
+                      <CalendarDays className="h-4 w-4" /> Confirm Booking{" "}
+                      <Send className="h-4 w-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+            </GlassCard>
+          </ScrollReveal>
+        )}
 
         <style>{`
           .input {
@@ -431,9 +407,10 @@ function Booking() {
         <PinModal
           open={pinOpen}
           onClose={() => setPinOpen(false)}
-          onSuccess={() => {
+          onSuccess={(pin) => {
             setPinOpen(false);
             sessionStorage.setItem("cmc_admin", "1");
+            sessionStorage.setItem("cmc_admin_pin", pin);
             navigate({ to: "/doctors" });
           }}
         />
@@ -449,7 +426,7 @@ function PinModal({
 }: {
   open: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (pin: string) => void;
 }) {
   const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""]);
   const [error, setError] = useState<string | null>(null);
@@ -476,7 +453,7 @@ function PinModal({
   const submit = (value: string) => {
     if (verifyPin(value)) {
       resetAttempts();
-      onSuccess();
+      onSuccess(value);
     } else {
       const left = registerFailedAttempt();
       setError(

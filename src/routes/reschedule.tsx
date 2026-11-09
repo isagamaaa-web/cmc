@@ -10,10 +10,7 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import { ALL_SERVICES, CLINIC } from "@/lib/clinic-data";
 import { findMyBooking, updateBooking, type StoredBooking } from "@/lib/bookings";
 import { queueReschedule } from "@/lib/offline-queue";
-import { supabase } from "@/integrations/supabase/client";
-
-// Type for Supabase client to avoid `as any` casts when accessing tables not in generated types
-type SupabaseClient = typeof supabase;
+import { rescheduleAppointment } from "@/lib/appointments.functions";
 
 const MAX_DAYS_AHEAD = 60;
 const todayISO = () => new Date().toISOString().split("T")[0];
@@ -106,34 +103,18 @@ function RescheduleForm({
   onDone: (b: StoredBooking) => void;
 }) {
   const navigate = useNavigate();
+  // Start as online so server and client render the same markup, then sync after mount.
   const [isOnline, setIsOnline] = useState(true);
-  const [isCheckingOnline, setIsCheckingOnline] = useState(true);
 
   useEffect(() => {
-    const check = async () => {
-      try {
-        const { error } = await (supabase as SupabaseClient)
-          .from("appointments")
-          .select("id")
-          .limit(1);
-        const isNetworkError =
-          error &&
-          (error.message?.includes("fetch") ||
-            error.message?.includes("network") ||
-            error.message?.includes("connection") ||
-            error.message?.includes("timeout"));
-        setIsOnline(!isNetworkError);
-      } catch (err) {
-        console.warn("Online check failed:", err);
-        const isNetworkError = err instanceof TypeError && err.message.includes("fetch");
-        setIsOnline(!isNetworkError);
-      } finally {
-        setIsCheckingOnline(false);
-      }
+    const update = () => setIsOnline(navigator.onLine);
+    update();
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    return () => {
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
     };
-    check();
-    const interval = setInterval(check, 30000);
-    return () => clearInterval(interval);
   }, []);
   const {
     register,
@@ -155,7 +136,7 @@ function RescheduleForm({
   const selectedService = watch("service");
   const hasErrors = Object.keys(errors).length > 0;
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = async (values: FormValues) => {
     const patch = {
       phone: values.phone,
       date: values.date,
@@ -175,49 +156,24 @@ function RescheduleForm({
       return;
     }
 
-    // Also try to sync with Supabase
-    const supabaseUpdate = async () => {
-      try {
-        const { error } = await (supabase as SupabaseClient)
-          .from("appointments")
-          .update({
-            phone: patch.phone,
-            date: patch.date,
-            service: patch.service,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", booking.id);
-
-        if (error) {
-          console.error("Supabase update error:", error);
-          const isNetworkError =
-            error.message?.includes("fetch") ||
-            error.message?.includes("network") ||
-            error.message?.includes("connection") ||
-            error.message?.includes("timeout");
-
-          if (isNetworkError || !isOnline) {
-            queueReschedule(booking.id, patch);
-            toast.info("Saved locally — will sync when back online.");
-          } else {
-            toast.warning("Saved locally. We'll sync it shortly.");
-          }
-        } else {
-          toast.success("Appointment rescheduled successfully!");
-        }
-      } catch (err) {
-        console.error("Supabase update exception:", err);
-        const isNetworkError = err instanceof TypeError && err.message.includes("fetch");
-        if (isNetworkError || !isOnline) {
-          queueReschedule(booking.id, patch);
-          toast.info("Saved locally — will sync when back online.");
-        } else {
-          toast.warning("Saved locally. We'll sync it shortly.");
-        }
+    try {
+      // Server-side update — same reliable path used for new bookings.
+      const result = await rescheduleAppointment({
+        data: { id: booking.id, ...patch },
+      });
+      if (result.ok) {
+        toast.success("Appointment rescheduled successfully!");
+      } else {
+        console.error("Reschedule save failed:", result.error);
+        queueReschedule(booking.id, patch);
+        toast.warning("Saved on this device — we'll keep trying to reach the clinic.");
       }
-    };
+    } catch (err) {
+      console.error("Reschedule submission error:", err);
+      queueReschedule(booking.id, patch);
+      toast.warning("Saved on this device — we'll keep trying to reach the clinic.");
+    }
 
-    supabaseUpdate();
     onDone(updated);
     navigate({ to: "/booking-success", search: { mode: "reschedule" } });
   };
@@ -236,7 +192,7 @@ function RescheduleForm({
 
         <ScrollReveal delay={80}>
           <GlassCard className="mt-8 p-6 md:p-8">
-            {!isOnline && !isCheckingOnline && (
+            {!isOnline && (
               <div
                 className="mb-5 flex items-center gap-2 rounded-xl bg-amber/15 border border-amber/40 p-3 text-sm text-amber-800"
                 role="status"
@@ -274,9 +230,12 @@ function RescheduleForm({
             )}
 
             <form
-              onSubmit={handleSubmit(onSubmit, () =>
-                toast.error("Please fix the highlighted fields."),
-              )}
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleSubmit(onSubmit, () =>
+                  toast.error("Please fix the highlighted fields."),
+                )(event);
+              }}
               className="grid gap-5"
               noValidate
             >

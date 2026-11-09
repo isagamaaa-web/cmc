@@ -44,6 +44,39 @@ export type Database = {
         };
         Relationships: [];
       };
+      appointments: {
+        Row: {
+          appointment_date: string;
+          created_at: string;
+          id: string;
+          notes: string | null;
+          patient_name: string;
+          phone: string;
+          service: string;
+          status: string;
+        };
+        Insert: {
+          appointment_date: string;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          patient_name: string;
+          phone: string;
+          service: string;
+          status?: string;
+        };
+        Update: {
+          appointment_date?: string;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          patient_name?: string;
+          phone?: string;
+          service?: string;
+          status?: string;
+        };
+        Relationships: [];
+      };
       service_prices: {
         Row: {
           price: string;

@@ -24,9 +24,15 @@ import {
 import { ApiPanel } from "@/components/ApiPanel";
 import { GlassCard } from "@/components/GlassCard";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import type { StoredBooking, AuditEntry } from "@/lib/bookings";
+import { loadAudit, clearAudit, type StoredBooking, type AuditEntry } from "@/lib/bookings";
 import { getAdminEmail, updateCredentials, verifyPin } from "@/lib/admin-credentials";
+import { listPrices, updatePrices } from "@/lib/prices.functions";
+import {
+  deleteAppointment,
+  listAppointments,
+  setAppointmentDone,
+  setStaffPin,
+} from "@/lib/appointments.functions";
 import { ALL_SERVICE_ITEMS } from "@/lib/clinic-data";
 
 /** Escapes a CSV cell, neutralising spreadsheet formula injection. */
@@ -34,6 +40,21 @@ function csvCell(value: string | undefined): string {
   const v = (value ?? "").replace(/\r?\n/g, " ");
   const safe = /^[=+\-@]/.test(v) ? `'${v}` : v;
   return `"${safe.replace(/"/g, '""')}"`;
+}
+
+/**
+ * Bookings store the optional email on its own line inside `notes`
+ * (the appointments table has no email column). Split it back out for display.
+ */
+function splitEmail(notes: string | null): { email?: string; notes?: string } {
+  const lines = (notes ?? "").split("\n");
+  const emailLine = lines.find((line) => /^Email:\s*\S+@\S+$/i.test(line.trim()));
+  const email = emailLine ? emailLine.replace(/^Email:\s*/i, "").trim() : undefined;
+  const rest = lines
+    .filter((line) => line !== emailLine)
+    .join("\n")
+    .trim();
+  return { email, notes: rest || undefined };
 }
 
 function downloadCsv(filename: string, rows: string[][]) {
@@ -77,15 +98,28 @@ function Admin() {
 
   const fetchBookings = async () => {
     try {
-      const { data, error } = await supabase
-        .from("appointments")
-        .select("*")
-        .order("submittedAt", { ascending: false });
+      const result = await listAppointments();
+      if (!result.ok) throw new Error(result.error);
 
-      if (error) throw error;
-      setBookings(data as StoredBooking[]);
+      const mapped: StoredBooking[] = result.rows.map((row) => {
+        const contact = splitEmail(row.notes);
+        return {
+          id: row.id,
+          deviceId: "",
+          name: row.patient_name ?? "",
+          phone: row.phone ?? "",
+          email: contact.email,
+          date: (row.appointment_date ?? "").slice(0, 10),
+          service: row.service ?? "",
+          notes: contact.notes,
+          submittedAt: row.created_at ?? "",
+          done: (row.status ?? "").toLowerCase() === "done",
+        };
+      });
+
+      setBookings(mapped);
     } catch (err) {
-      console.error("Failed to fetch bookings from Supabase:", err);
+      console.error("Failed to fetch bookings from the server:", err);
       toast.error("Could not load appointments from the server.");
     }
   };
@@ -156,32 +190,45 @@ function Admin() {
 
   const signOut = () => {
     sessionStorage.removeItem("cmc_admin");
+    sessionStorage.removeItem("cmc_admin_pin");
     navigate({ to: "/" });
   };
 
+  const adminPin = () => {
+    const pin = sessionStorage.getItem("cmc_admin_pin") ?? "";
+    if (!/^[0-9]{6}$/.test(pin)) {
+      toast.error("Please sign in with your PIN again to make changes.");
+      return null;
+    }
+    return pin;
+  };
+
   const toggleDone = async (id: string) => {
+    const pin = adminPin();
+    if (!pin) return;
     try {
       const booking = bookings.find((b) => b.id === id);
       const newDone = !booking?.done;
-      const { error } = await supabase.from("appointments").update({ done: newDone }).eq("id", id);
-
-      if (error) throw error;
+      const result = await setAppointmentDone({ data: { id, done: newDone, pin } });
+      if (!result.ok) throw new Error(result.error);
       setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, done: newDone } : b)));
     } catch (err) {
       console.error("Failed to toggle done:", err);
-      toast.error("Could not update appointment status.");
+      toast.error(err instanceof Error ? err.message : "Could not update appointment status.");
     }
   };
 
   const remove = async (id: string) => {
     if (!confirm("Delete this appointment?")) return;
+    const pin = adminPin();
+    if (!pin) return;
     try {
-      const { error } = await supabase.from("appointments").delete().eq("id", id);
-      if (error) throw error;
+      const result = await deleteAppointment({ data: { id, pin } });
+      if (!result.ok) throw new Error(result.error);
       setBookings((prev) => prev.filter((b) => b.id !== id));
     } catch (err) {
       console.error("Failed to remove appointment:", err);
-      toast.error("Could not delete appointment.");
+      toast.error(err instanceof Error ? err.message : "Could not delete appointment.");
     }
   };
 
@@ -475,6 +522,7 @@ function CredentialsModal({ open, onClose }: { open: boolean; onClose: () => voi
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -488,7 +536,7 @@ function CredentialsModal({ open, onClose }: { open: boolean; onClose: () => voi
 
   if (!open) return null;
 
-  const save = (e: React.FormEvent) => {
+  const save = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!verifyPin(currentPin)) {
       setError("Current PIN is incorrect.");
@@ -506,9 +554,24 @@ function CredentialsModal({ open, onClose }: { open: boolean; onClose: () => voi
       setError("The two new PINs don't match.");
       return;
     }
-    updateCredentials({ email, pin });
-    toast.success("Admin email and PIN updated on this device.");
-    onClose();
+
+    setSaving(true);
+    try {
+      // Keep the server-side staff PIN in sync so admin actions keep working.
+      const result = await setStaffPin({ data: { currentPin, newPin: pin } });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      updateCredentials({ email, pin });
+      sessionStorage.setItem("cmc_admin_pin", pin);
+      toast.success("Admin email and PIN updated on this device.");
+      onClose();
+    } catch {
+      setError("Could not save the new PIN. Check your connection and try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -597,8 +660,12 @@ function CredentialsModal({ open, onClose }: { open: boolean; onClose: () => voi
             </p>
           )}
 
-          <button type="submit" className="btn-royal mt-1 rounded-full px-5 py-2.5 font-semibold">
-            Save new credentials
+          <button
+            type="submit"
+            disabled={saving}
+            className="btn-royal mt-1 rounded-full px-5 py-2.5 font-semibold disabled:opacity-60"
+          >
+            {saving ? "Saving…" : "Save new credentials"}
           </button>
         </form>
       </div>
@@ -648,7 +715,9 @@ function Row({ icon, label, value }: { icon: React.ReactNode; label: string; val
 /** Clinic-wide price editor — saves to the shared backend so every device updates. */
 function PricesPanel() {
   const [rows, setRows] = useState<Record<string, string>>(() =>
-    Object.fromEntries(ALL_SERVICE_ITEMS.map((i) => [i.title, i.price])),
+    Object.fromEntries(
+      ALL_SERVICE_ITEMS.map((i) => [i.title, (i as { price?: string }).price ?? ""]),
+    ),
   );
   const [initial, setInitial] = useState<Record<string, string>>(rows);
   const [pin, setPin] = useState("");
@@ -659,7 +728,9 @@ function PricesPanel() {
     setLoading(true);
     listPrices()
       .then((live) => {
-        const base = Object.fromEntries(ALL_SERVICE_ITEMS.map((i) => [i.title, i.price]));
+        const base = Object.fromEntries(
+          ALL_SERVICE_ITEMS.map((i) => [i.title, (i as { price?: string }).price ?? ""]),
+        );
         const merged = { ...base, ...Object.fromEntries(live.map((r) => [r.title, r.price])) };
         setRows(merged);
         setInitial(merged);

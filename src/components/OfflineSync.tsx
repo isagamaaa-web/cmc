@@ -10,9 +10,9 @@ export function OfflineSync() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const run = () => {
+    const run = async () => {
       if (queueSize() === 0) return;
-      const { synced } = flushQueue();
+      const { synced } = await flushQueue();
       if (synced > 0) {
         toast.success(
           `${synced} pending request${synced === 1 ? "" : "s"} synced now that you're back online.`,
@@ -20,9 +20,10 @@ export function OfflineSync() {
       }
     };
 
-    run();
-    window.addEventListener("online", run);
-    return () => window.removeEventListener("online", run);
+    void run();
+    const onOnline = () => void run();
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
   }, []);
 
   return null;

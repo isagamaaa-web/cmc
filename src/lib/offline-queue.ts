@@ -1,4 +1,5 @@
-import { addBooking, updateBooking, type StoredBooking } from "@/lib/bookings";
+import { addBooking, loadBookings, updateBooking, type StoredBooking } from "@/lib/bookings";
+import { createAppointment, rescheduleAppointment } from "@/lib/appointments.functions";
 
 /**
  * Offline submission queue.
@@ -61,21 +62,51 @@ export function queueSize(): number {
   return loadQueue().length;
 }
 
-/** Replays every queued item. Items that still fail stay in the queue. */
-export function flushQueue(): { synced: number; remaining: number } {
+/** Replays every queued item to the server. Items that still fail stay in the queue. */
+export async function flushQueue(): Promise<{ synced: number; remaining: number }> {
   const items = loadQueue();
   if (!items.length) return { synced: 0, remaining: 0 };
+
   const still: QueuedItem[] = [];
   let synced = 0;
+
   for (const item of items) {
     try {
-      if (item.kind === "booking") addBooking(item.payload);
-      else updateBooking(item.bookingId, item.payload);
+      if (item.kind === "booking") {
+        // Keep the local copy, but never duplicate it.
+        if (!loadBookings().some((b) => b.id === item.payload.id)) addBooking(item.payload);
+
+        const result = await createAppointment({
+          data: {
+            id: item.payload.id,
+            name: item.payload.name,
+            phone: item.payload.phone,
+            email: item.payload.email ?? "",
+            date: item.payload.date,
+            service: item.payload.service,
+            notes: item.payload.notes ?? "",
+          },
+        });
+        if (!result.ok) throw new Error(result.error);
+      } else {
+        updateBooking(item.bookingId, item.payload);
+        const local = loadBookings().find((b) => b.id === item.bookingId);
+        const phone = item.payload.phone ?? local?.phone;
+        const date = item.payload.date ?? local?.date;
+        const service = item.payload.service ?? local?.service;
+        if (!phone || !date || !service) throw new Error("Incomplete reschedule");
+
+        const result = await rescheduleAppointment({
+          data: { id: item.bookingId, phone, date, service },
+        });
+        if (!result.ok) throw new Error(result.error);
+      }
       synced++;
     } catch {
       still.push(item);
     }
   }
+
   saveQueue(still);
   return { synced, remaining: still.length };
 }
