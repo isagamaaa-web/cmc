@@ -1,3 +1,5 @@
+import { readDeviceCookie, writeDeviceCookie } from "@/lib/cookie-consent";
+
 export type StoredBooking = {
   id: string;
   deviceId: string;
@@ -41,32 +43,18 @@ function fingerprint(): string {
   return `fp_${h1.toString(36)}`;
 }
 
-/** Mirror of the device id in a long-lived cookie, so clearing one store isn't enough to lose it. */
-function readCookieId(): string | null {
-  try {
-    const m = document.cookie.match(/(?:^|;\s*)cmc_did=([^;]+)/);
-    return m ? decodeURIComponent(m[1]) : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeCookieId(id: string) {
-  try {
-    document.cookie = `cmc_did=${encodeURIComponent(id)}; path=/; max-age=${60 * 60 * 24 * 3650}; samesite=lax`;
-  } catch {
-    /* ignore */
-  }
-}
-
+/**
+ * Stable device id. `localStorage` keeps the appointment working for everyone;
+ * the long-lived cookie mirror is only used after cookie consent is accepted.
+ */
 export function getDeviceId(): string {
   if (typeof window === "undefined") return "ssr";
   const fp = fingerprint();
   try {
-    const existing = localStorage.getItem(DEVICE_KEY) ?? readCookieId();
+    const existing = localStorage.getItem(DEVICE_KEY) ?? readDeviceCookie();
     if (existing) {
       localStorage.setItem(DEVICE_KEY, existing);
-      writeCookieId(existing);
+      writeDeviceCookie(existing);
       return existing;
     }
     const id = `${fp}_${
@@ -75,10 +63,10 @@ export function getDeviceId(): string {
         : Math.random().toString(36).slice(2)
     }`;
     localStorage.setItem(DEVICE_KEY, id);
-    writeCookieId(id);
+    writeDeviceCookie(id);
     return id;
   } catch {
-    return readCookieId() ?? fp;
+    return readDeviceCookie() ?? fp;
   }
 }
 

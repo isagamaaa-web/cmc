@@ -26,15 +26,18 @@ const USER_CLOSE = "<<<END_USER_INPUT>>>";
 
 /** Never let model output carry markup or executable snippets to the browser. */
 function sanitizeOutput(text: string): string {
-  return text
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
-    .replace(/<\s*\/?\s*(script|style|iframe|object|embed|link|meta|svg|img|form)[^>]*>/gi, "")
-    .replace(/<[^>]*>/g, "")
-    .replace(/```[\s\S]*?```/g, "")
-    .replace(/\b(javascript|data|vbscript)\s*:/gi, "")
-    .replace(/on[a-z]+\s*=\s*(["'][^"']*["']|[^\s>]+)/gi, "")
-    .trim()
-    .slice(0, 2000);
+  return (
+    text
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+      .replace(/<\s*\/?\s*(script|style|iframe|object|embed|link|meta|svg|img|form)[^>]*>/gi, "")
+      .replace(/<[^>]*>/g, "")
+      .replace(/```[\s\S]*?```/g, "")
+      .replace(/\b(javascript|data|vbscript)\s*:/gi, "")
+      .replace(/on[a-z]+\s*=\s*(["'][^"']*["']|[^\s>]+)/gi, "")
+      .trim()
+      .slice(0, 2000)
+  );
 }
 
 /**
@@ -55,6 +58,7 @@ const INJECTION_PATTERNS: RegExp[] = [
 
 function sanitizeInput(text: string): string {
   let out = text
+    // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, " ")
     .replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u206F]/g, "") // zero-width / bidi smuggling
     .replace(/```[\s\S]*?```/g, " ")

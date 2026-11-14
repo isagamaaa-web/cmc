@@ -373,3 +373,113 @@
     animation: none;
   }
 }
+
+/* --- Cookie consent card --- */
+@keyframes cookie-card-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 28px, 0) scale(0.96);
+  }
+  60% {
+    opacity: 1;
+    transform: translate3d(0, -4px, 0) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+@keyframes cookie-card-out {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0) scale(0.97);
+  }
+}
+@keyframes cookie-wiggle {
+  0%,
+  55%,
+  100% {
+    transform: rotate(0deg);
+  }
+  62% {
+    transform: rotate(-12deg);
+  }
+  70% {
+    transform: rotate(10deg);
+  }
+  78% {
+    transform: rotate(-6deg);
+  }
+  86% {
+    transform: rotate(3deg);
+  }
+}
+@keyframes cookie-pulse {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.7;
+  }
+  70% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+body.cookie-consent-open {
+  padding-bottom: 26rem;
+}
+@media (min-width: 768px) {
+  body.cookie-consent-open {
+    padding-bottom: 17rem;
+  }
+}
+
+.cookie-card--enter {
+  animation: cookie-card-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.cookie-card--exit {
+  animation: cookie-card-out 0.34s ease-in both;
+}
+.cookie-wiggle {
+  transform-origin: 50% 80%;
+  animation: cookie-wiggle 4s ease-in-out infinite;
+}
+.cookie-pulse {
+  animation: cookie-pulse 2.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cookie-card--enter,
+  .cookie-card--exit,
+  .cookie-wiggle,
+  .cookie-pulse {
+    animation: none;
+  }
+}
+
+/* --- Privacy policy dialog --- */
+.privacy-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(9, 125, 134, 0.35) transparent;
+  overscroll-behavior: contain;
+}
+.privacy-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.privacy-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.privacy-scroll::-webkit-scrollbar-thumb {
+  background: rgba(9, 125, 134, 0.28);
+  border-radius: 999px;
+}
+.privacy-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(9, 125, 134, 0.45);
+}

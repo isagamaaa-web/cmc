@@ -15,6 +15,7 @@ import { Route as BookingRouteImport } from './routes/booking'
 import { Route as BookingSuccessRouteImport } from './routes/booking-success'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DoctorsRouteImport } from './routes/doctors'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RescheduleRouteImport } from './routes/reschedule'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as BookingConfirmationRouteImport } from './routes/booking.confirmation'
@@ -50,6 +51,11 @@ const DoctorsRoute = DoctorsRouteImport.update({
   path: '/doctors',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RescheduleRoute = RescheduleRouteImport.update({
   id: '/reschedule',
   path: '/reschedule',
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/booking-success': typeof BookingSuccessRoute
   '/contact': typeof ContactRoute
   '/doctors': typeof DoctorsRoute
+  '/privacy': typeof PrivacyRoute
   '/reschedule': typeof RescheduleRoute
   '/services': typeof ServicesRoute
   '/booking/confirmation': typeof BookingConfirmationRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/booking-success': typeof BookingSuccessRoute
   '/contact': typeof ContactRoute
   '/doctors': typeof DoctorsRoute
+  '/privacy': typeof PrivacyRoute
   '/reschedule': typeof RescheduleRoute
   '/services': typeof ServicesRoute
   '/booking/confirmation': typeof BookingConfirmationRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/booking-success': typeof BookingSuccessRoute
   '/contact': typeof ContactRoute
   '/doctors': typeof DoctorsRoute
+  '/privacy': typeof PrivacyRoute
   '/reschedule': typeof RescheduleRoute
   '/services': typeof ServicesRoute
   '/booking/confirmation': typeof BookingConfirmationRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/booking-success'
     | '/contact'
     | '/doctors'
+    | '/privacy'
     | '/reschedule'
     | '/services'
     | '/booking/confirmation'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/booking-success'
     | '/contact'
     | '/doctors'
+    | '/privacy'
     | '/reschedule'
     | '/services'
     | '/booking/confirmation'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/booking-success'
     | '/contact'
     | '/doctors'
+    | '/privacy'
     | '/reschedule'
     | '/services'
     | '/booking/confirmation'
@@ -154,6 +166,7 @@ export interface RootRouteChildren {
   BookingSuccessRoute: typeof BookingSuccessRoute
   ContactRoute: typeof ContactRoute
   DoctorsRoute: typeof DoctorsRoute
+  PrivacyRoute: typeof PrivacyRoute
   RescheduleRoute: typeof RescheduleRoute
   ServicesRoute: typeof ServicesRoute
 }
@@ -200,6 +213,13 @@ declare module '@tanstack/react-router' {
       path: '/doctors'
       fullPath: '/doctors'
       preLoaderRoute: typeof DoctorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reschedule': {
@@ -253,6 +273,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookingSuccessRoute: BookingSuccessRoute,
   ContactRoute: ContactRoute,
   DoctorsRoute: DoctorsRoute,
+  PrivacyRoute: PrivacyRoute,
   RescheduleRoute: RescheduleRoute,
   ServicesRoute: ServicesRoute,
 }

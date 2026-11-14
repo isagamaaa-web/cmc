@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { CalendarDays, Send, ShieldCheck, X, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { GlassCard } from "@/components/GlassCard";
+import { PrivacyPolicyLink } from "@/components/PrivacyPolicy";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { ALL_SERVICES } from "@/lib/clinic-data";
 import { getDeviceId, addBooking, type StoredBooking } from "@/lib/bookings";
@@ -382,6 +383,16 @@ function Booking() {
                     </>
                   )}
                 </button>
+                <p className="-mt-2 flex items-start justify-center gap-1.5 text-center text-xs leading-relaxed text-muted-foreground">
+                  <ShieldCheck
+                    className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary"
+                    aria-hidden="true"
+                  />
+                  <span>
+                    By continuing, you agree to our{" "}
+                    <PrivacyPolicyLink className="text-primary">Privacy Policy</PrivacyPolicyLink>.
+                  </span>
+                </p>
               </form>
             </GlassCard>
           </ScrollReveal>

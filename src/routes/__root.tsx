@@ -19,6 +19,8 @@ import { Chatbot } from "@/components/Chatbot";
 import { PageBackground } from "@/components/PageBackground";
 import { OfflineCache } from "@/components/OfflineCache";
 import { OfflineSync } from "@/components/OfflineSync";
+import { CookieConsent } from "@/components/CookieConsent";
+import { PrivacyPolicyProvider } from "@/components/PrivacyPolicy";
 import { LanguageProvider } from "@/context/LanguageContext";
 
 import { Toaster } from "@/components/ui/sonner";
@@ -167,20 +169,23 @@ function RootComponent() {
   return (
     <LanguageProvider>
       <QueryClientProvider client={queryClient}>
-        {!isAdmin && <PageBackground />}
-        {!isAdmin && <Sparkles />}
-        <div className="flex min-h-dvh flex-col">
-          <Header />
-          <main className="flex-1">
-            <Outlet />
-          </main>
-          <Footer />
-        </div>
-        <Chatbot />
-        <OfflineCache />
-        <OfflineSync />
+        <PrivacyPolicyProvider>
+          {!isAdmin && <PageBackground />}
+          {!isAdmin && <Sparkles />}
+          <div className="flex min-h-dvh flex-col">
+            <Header />
+            <main className="flex-1">
+              <Outlet />
+            </main>
+            <Footer />
+          </div>
+          <Chatbot />
+          <OfflineCache />
+          <OfflineSync />
+          <CookieConsent />
 
-        <Toaster />
+          <Toaster />
+        </PrivacyPolicyProvider>
       </QueryClientProvider>
     </LanguageProvider>
   );
