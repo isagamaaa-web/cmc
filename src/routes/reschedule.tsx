@@ -1,16 +1,15 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CalendarClock, Save, Smartphone } from "lucide-react";
+import { ArrowRight, CalendarClock, CalendarX, RefreshCw, Save, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { GlassCard } from "@/components/GlassCard";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { ALL_SERVICES, CLINIC } from "@/lib/clinic-data";
-import { findMyBooking, updateBooking, type StoredBooking } from "@/lib/bookings";
-import { queueReschedule } from "@/lib/offline-queue";
-import { rescheduleAppointment } from "@/lib/appointments.functions";
+import { findMyBooking, setBookingDone, updateBooking, type StoredBooking } from "@/lib/bookings";
+import { getAppointmentStatus, rescheduleAppointment } from "@/lib/appointments.functions";
 
 const MAX_DAYS_AHEAD = 60;
 const todayISO = () => new Date().toISOString().split("T")[0];
@@ -62,37 +61,185 @@ export const Route = createFileRoute("/reschedule")({
   component: Reschedule,
 });
 
+type BlockReason = "no_booking" | "done" | "not_found" | "check_failed" | "offline";
+
 function Reschedule() {
   const navigate = useNavigate();
-  const [booking, setBooking] = useState<StoredBooking | null | undefined>(undefined);
+  const [booking, setBooking] = useState<StoredBooking | null>(null);
+  const [checking, setChecking] = useState(true);
+  const [blocked, setBlocked] = useState<BlockReason | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
-    const found = findMyBooking();
-    if (!found) {
+    let cancelled = false;
+
+    const blockAndGoToBooking = (reason: "no_booking" | "done") => {
+      setBlocked(reason);
+      setChecking(false);
+      setBooking(null);
       try {
-        sessionStorage.setItem("cmc_no_appointment", "1");
+        sessionStorage.setItem(
+          reason === "done" ? "cmc_appointment_done" : "cmc_no_appointment",
+          "1",
+        );
       } catch {
         /* ignore */
       }
-      toast.error("You don't have an appointment", {
-        description: "Please book an appointment before rescheduling.",
-      });
-      navigate({ to: "/booking" });
-      setBooking(null);
-      return;
-    }
-    setBooking(found);
-  }, [navigate]);
+      if (reason === "done") {
+        toast.error("This appointment is already completed", {
+          description: "Please book a new appointment.",
+        });
+      } else {
+        toast.error("You don't have an appointment", {
+          description: "Please book an appointment before rescheduling.",
+        });
+      }
+      navigate({ to: "/booking", replace: true });
+    };
 
-  if (!booking) {
+    const verify = async () => {
+      setChecking(true);
+      setBlocked(null);
+
+      const found = findMyBooking();
+      if (!found) {
+        blockAndGoToBooking("no_booking");
+        return;
+      }
+      if (found.done) {
+        blockAndGoToBooking("done");
+        return;
+      }
+
+      // We need the server to confirm that the appointment still exists and is
+      // not already completed. Offline rescheduling is intentionally blocked:
+      // without this check a completed appointment could be changed locally.
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        setBlocked("offline");
+        setChecking(false);
+        return;
+      }
+
+      try {
+        const result = await getAppointmentStatus({ data: { id: found.id } });
+        if (cancelled) return;
+        if (!result.ok) {
+          setBlocked("check_failed");
+          setChecking(false);
+          return;
+        }
+        if (!result.found) {
+          setBlocked("not_found");
+          setChecking(false);
+          return;
+        }
+        if (result.status === "done") {
+          setBookingDone(found.id, true);
+          blockAndGoToBooking("done");
+          return;
+        }
+        setBooking(found);
+        setChecking(false);
+      } catch {
+        if (!cancelled) {
+          setBlocked("check_failed");
+          setChecking(false);
+        }
+      }
+    };
+
+    void verify();
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate, retryKey]);
+
+  if (checking) {
     return (
       <section className="flex min-h-[60vh] items-center justify-center px-4">
-        <p className="text-muted-foreground">Checking this device for an appointment…</p>
+        <p className="text-muted-foreground">Checking this device for an appointment...</p>
       </section>
     );
   }
 
+  if (blocked) {
+    return <BlockedReschedule reason={blocked} onRetry={() => setRetryKey((key) => key + 1)} />;
+  }
+
+  if (!booking) return null;
+
   return <RescheduleForm booking={booking} onDone={setBooking} />;
+}
+
+function BlockedReschedule({ reason, onRetry }: { reason: BlockReason; onRetry: () => void }) {
+  const copy: Record<BlockReason, { title: string; body: string }> = {
+    no_booking: {
+      title: "No appointment to reschedule",
+      body: "You need to book an appointment before you can reschedule. We're taking you to the booking page.",
+    },
+    done: {
+      title: "This appointment is completed",
+      body: "Staff marked this appointment as done. You can't reschedule a completed appointment — please book a new one.",
+    },
+    not_found: {
+      title: "Appointment not found",
+      body: "We couldn't find this appointment on the clinic system. If you just booked, wait a moment and try again. Otherwise, please book a new appointment.",
+    },
+    check_failed: {
+      title: "Could not verify your appointment",
+      body: "We couldn't confirm the appointment status. Please try again, or book a new appointment.",
+    },
+    offline: {
+      title: "Connect to reschedule",
+      body: "You're offline. We need to check your appointment status before rescheduling. Reconnect and try again, or book a new appointment.",
+    },
+  };
+  const { title, body } = copy[reason];
+  const canRetry = reason === "not_found" || reason === "check_failed" || reason === "offline";
+
+  return (
+    <section className="px-4 py-16 md:px-8">
+      <div className="mx-auto max-w-2xl">
+        <GlassCard className="p-8 text-center md:p-10">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <CalendarX className="h-8 w-8" aria-hidden="true" />
+          </div>
+          <h1 className="mt-5 text-3xl text-primary sm:text-4xl">{title}</h1>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+            {body}
+          </p>
+          <div className="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+            <button
+              type="button"
+              disabled
+              aria-disabled="true"
+              className="btn-royal inline-flex cursor-not-allowed items-center justify-center gap-2 rounded-full px-5 py-3 font-semibold opacity-50"
+            >
+              <CalendarClock className="h-4 w-4" aria-hidden="true" />
+              Reschedule unavailable
+            </button>
+            {canRetry && (
+              <button
+                type="button"
+                onClick={onRetry}
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-primary/25 bg-white px-5 py-3 font-semibold text-foreground transition-colors hover:bg-secondary"
+              >
+                <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                Try again
+              </button>
+            )}
+            <Link
+              to="/booking"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-primary/25 bg-white px-5 py-3 font-semibold text-foreground transition-colors hover:bg-secondary"
+            >
+              Go to booking page
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
+        </GlassCard>
+      </div>
+    </section>
+  );
 }
 
 function RescheduleForm({
@@ -137,45 +284,67 @@ function RescheduleForm({
   const hasErrors = Object.keys(errors).length > 0;
 
   const onSubmit = async (values: FormValues) => {
+    if (!isOnline) {
+      toast.error("Reconnect before rescheduling so we can verify your appointment.");
+      return;
+    }
+
     const patch = {
       phone: values.phone,
       date: values.date,
       service: values.service,
     };
-    let updated: StoredBooking | undefined;
-    try {
-      updated = updateBooking(booking.id, patch);
-    } catch {
-      updated = undefined;
-    }
-    if (!updated) {
-      // Park the change and replay it automatically once storage/network recovers.
-      queueReschedule(booking.id, patch);
-      onDone({ ...booking, ...patch, updatedAt: new Date().toISOString() });
-      navigate({ to: "/booking-success", search: { mode: "reschedule" } });
-      return;
-    }
 
     try {
-      // Server-side update — same reliable path used for new bookings.
+      // The server verifies that the appointment still exists and is not done
+      // before changing anything. Update the server first so a rejected
+      // reschedule never leaves a misleading local copy.
       const result = await rescheduleAppointment({
         data: { id: booking.id, ...patch },
       });
-      if (result.ok) {
-        toast.success("Appointment rescheduled successfully!");
-      } else {
+
+      if (!result.ok) {
+        const code = "code" in result ? result.code : "error";
+        if (code === "done") {
+          setBookingDone(booking.id, true);
+          toast.error(result.error);
+          try {
+            sessionStorage.setItem("cmc_appointment_done", "1");
+          } catch {
+            /* ignore */
+          }
+          navigate({ to: "/booking", replace: true });
+          return;
+        }
+        if (code === "not_found") {
+          toast.error(result.error);
+          try {
+            sessionStorage.setItem("cmc_no_appointment", "1");
+          } catch {
+            /* ignore */
+          }
+          navigate({ to: "/booking", replace: true });
+          return;
+        }
         console.error("Reschedule save failed:", result.error);
-        queueReschedule(booking.id, patch);
-        toast.warning("Saved on this device — we'll keep trying to reach the clinic.");
+        toast.error(result.error);
+        return;
       }
+
+      let updated: StoredBooking | undefined;
+      try {
+        updated = updateBooking(booking.id, patch);
+      } catch {
+        updated = undefined;
+      }
+
+      toast.success("Appointment rescheduled successfully!");
+      if (updated) onDone(updated);
+      navigate({ to: "/booking-success", search: { mode: "reschedule" } });
     } catch (err) {
       console.error("Reschedule submission error:", err);
-      queueReschedule(booking.id, patch);
-      toast.warning("Saved on this device — we'll keep trying to reach the clinic.");
+      toast.error("Could not reschedule right now. Please try again.");
     }
-
-    onDone(updated);
-    navigate({ to: "/booking-success", search: { mode: "reschedule" } });
   };
 
   return (
@@ -201,8 +370,8 @@ function RescheduleForm({
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                 </span>
-                You're currently offline. Changes will be saved locally and synced when you're back
-                online.
+                You're currently offline. Reconnect before rescheduling so we can verify your
+                appointment.
               </div>
             )}
             <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl bg-secondary/60 px-4 py-3 text-sm">
@@ -309,8 +478,8 @@ function RescheduleForm({
 
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="btn-royal mt-2 inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold disabled:opacity-60"
+                disabled={isSubmitting || !isOnline}
+                className="btn-royal mt-2 inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <CalendarClock className="h-4 w-4" /> Save new details <Save className="h-4 w-4" />
               </button>

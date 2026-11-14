@@ -191,11 +191,16 @@ function Booking() {
 
   const [pinOpen, setPinOpen] = useState(false);
   const [noAppt, setNoAppt] = useState(false);
+  const [completedAppt, setCompletedAppt] = useState(false);
   useEffect(() => {
     try {
       if (sessionStorage.getItem("cmc_no_appointment") === "1") {
         setNoAppt(true);
         sessionStorage.removeItem("cmc_no_appointment");
+      }
+      if (sessionStorage.getItem("cmc_appointment_done") === "1") {
+        setCompletedAppt(true);
+        sessionStorage.removeItem("cmc_appointment_done");
       }
     } catch {
       /* ignore */
@@ -236,6 +241,16 @@ function Booking() {
             className="mt-6 rounded-2xl border border-accent/50 bg-accent/15 p-4 text-sm font-semibold text-primary"
           >
             You don't have an appointment yet — please book one before rescheduling.
+          </div>
+        )}
+
+        {completedAppt && (
+          <div
+            role="status"
+            className="mt-6 rounded-2xl border border-primary/25 bg-primary/10 p-4 text-sm font-semibold text-primary"
+          >
+            This appointment is already completed, so it can't be rescheduled. Please book a new
+            appointment below.
           </div>
         )}
 

@@ -183,10 +183,74 @@ export const createAppointment = createServerFn({ method: "POST" })
     return { ok: true as const, id };
   });
 
+/**
+ * Patient-safe status lookup used by the reschedule page. It only returns the
+ * existence and status of a specific appointment id; it never returns patient
+ * details or the full appointment list.
+ */
+export const getAppointmentStatus = createServerFn({ method: "POST" })
+  .validator((data: unknown) => z.object({ id: ID }).parse(data))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await retryRequest(
+      async () =>
+        await supabaseAdmin
+          .from("appointments")
+          .select("id,status")
+          .eq("id", data.id)
+          .maybeSingle(),
+      hasError,
+    );
+
+    if (error) {
+      console.error("[appointments] status check failed:", error.message);
+      return { ok: false as const, error: "Could not check the appointment status." };
+    }
+    if (!row) return { ok: true as const, found: false as const, status: null };
+
+    const status = (row as { status?: string | null }).status ?? "pending";
+    return { ok: true as const, found: true as const, status: status.toLowerCase() };
+  });
+
 export const rescheduleAppointment = createServerFn({ method: "POST" })
   .validator((data: unknown) => rescheduleInput.parse(data))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Rescheduling is only valid for an appointment that still exists and has
+    // not been completed by staff. This check is server-side so it cannot be
+    // bypassed from the browser.
+    const { data: current, error: readError } = await retryRequest(
+      async () =>
+        await supabaseAdmin
+          .from("appointments")
+          .select("id,status")
+          .eq("id", data.id)
+          .maybeSingle(),
+      hasError,
+    );
+
+    if (readError) {
+      console.error("[appointments] reschedule status check failed:", readError.message);
+      return { ok: false as const, error: "Could not check the appointment. Please try again." };
+    }
+    if (!current) {
+      return {
+        ok: false as const,
+        code: "not_found" as const,
+        error: "No appointment found. Please book an appointment first.",
+      };
+    }
+
+    const status = ((current as { status?: string | null }).status ?? "").toLowerCase();
+    if (status === "done") {
+      return {
+        ok: false as const,
+        code: "done" as const,
+        error: "This appointment is marked done. Please book a new appointment.",
+      };
+    }
+
     const { data: rows, error } = await retryRequest(
       async () =>
         await supabaseAdmin
@@ -197,6 +261,7 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
             service: data.service,
           })
           .eq("id", data.id)
+          .or("status.is.null,status.neq.done")
           .select("id"),
       hasError,
     );
@@ -205,7 +270,39 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
       console.error("[appointments] reschedule failed:", error.message);
       return { ok: false as const, error: "Could not update the appointment. Please try again." };
     }
-    return { ok: true as const, synced: (rows?.length ?? 0) > 0 };
+    if (!rows?.length) {
+      // The row may have been marked done or deleted between the read and the
+      // update. Re-read once so the UI can give the correct instruction.
+      const { data: after, error: afterError } = await retryRequest(
+        async () =>
+          await supabaseAdmin
+            .from("appointments")
+            .select("id,status")
+            .eq("id", data.id)
+            .maybeSingle(),
+        hasError,
+      );
+      if (afterError) {
+        console.error("[appointments] reschedule re-check failed:", afterError.message);
+        return { ok: false as const, error: "Could not update the appointment. Please try again." };
+      }
+      if (!after) {
+        return {
+          ok: false as const,
+          code: "not_found" as const,
+          error: "No appointment found. Please book an appointment first.",
+        };
+      }
+      if (((after as { status?: string | null }).status ?? "").toLowerCase() === "done") {
+        return {
+          ok: false as const,
+          code: "done" as const,
+          error: "This appointment is marked done. Please book a new appointment.",
+        };
+      }
+      return { ok: false as const, error: "Could not update the appointment. Please try again." };
+    }
+    return { ok: true as const, synced: true };
   });
 
 export const listAppointments = createServerFn({ method: "GET" }).handler(async () => {

@@ -191,6 +191,15 @@ export function updateBooking(id: string, patch: Partial<StoredBooking>) {
   return after;
 }
 
+/**
+ * Keep the local copy in sync when staff marks an appointment done. This does
+ * not write an audit entry because the status change happened on the server.
+ */
+export function setBookingDone(id: string, done: boolean) {
+  const list = loadBookings().map((b) => (b.id === id ? { ...b, done } : b));
+  saveBookings(list);
+}
+
 /** Most recent booking made from this device, if any. */
 export function findMyBooking(): StoredBooking | undefined {
   const id = getDeviceId();
